@@ -11,3 +11,6 @@ data/raw/*
 data/raw/bike/*
 !data/raw/bike/*.csv
 !data/raw/weather_seoul_open_meteo.csv
+
+# Local presentation bundle generated for the Codex task output.
+outputs/
