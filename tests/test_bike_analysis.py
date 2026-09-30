@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from analysis import run_pipeline
 from src.bike_analysis import (
     add_features,
     aggregate_bike_files,
@@ -200,3 +201,50 @@ def test_make_plots_handles_missing_weather_values(tmp_path: Path):
 
     assert (tmp_path / "01_daily_trend.png").exists()
     assert len(paths) >= 3
+
+
+def test_run_pipeline_writes_processed_csv_and_three_images(tmp_path: Path):
+    bike_dir = tmp_path / "bike"
+    bike_dir.mkdir()
+    bike_source = bike_dir / "bike_2023.csv"
+    dates = pd.date_range("2023-01-01", periods=14, freq="D")
+    pd.DataFrame(
+        {
+            "대여일자": dates.strftime("%Y-%m-%d"),
+            "대여소번호": list(range(14)),
+            "이용건수": list(range(100, 114)),
+        }
+    ).to_csv(bike_source, index=False, encoding="utf-8-sig")
+    weather_path = tmp_path / "weather.csv"
+    pd.DataFrame(
+        {
+            "일시": dates.strftime("%Y-%m-%d"),
+            "평균기온(℃)": [5.0] * 14,
+            "강수량(mm)": [0.0] * 14,
+        }
+    ).to_csv(weather_path, index=False, encoding="utf-8-sig")
+
+    summary = run_pipeline(
+        bike_dir=bike_dir,
+        weather_path=weather_path,
+        output_dir=tmp_path,
+        start="2023-01-01",
+        end="2023-01-14",
+    )
+
+    assert summary["point_count"] == 14
+    assert (tmp_path / "data" / "processed_daily_rentals.csv").exists()
+    assert len(list((tmp_path / "images").glob("*.png"))) >= 3
+
+
+def test_run_pipeline_rejects_missing_bike_directory(tmp_path: Path):
+    missing_dir = tmp_path / "missing-bike"
+
+    with pytest.raises(FileNotFoundError, match="missing-bike"):
+        run_pipeline(
+            bike_dir=missing_dir,
+            weather_path=None,
+            output_dir=tmp_path,
+            start="2023-01-01",
+            end="2023-01-14",
+        )
