@@ -1028,14 +1028,33 @@
                 <p>trend / seasonal / residual</p>
               </div>
             </a>
+
+            <a
+              class="chart-card wide reveal"
+              href="images/05_correlation.png"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div class="chart-meta"><span>05 / association</span><span>Spearman ρ</span></div>
+              <img
+                src="images/05_correlation.png"
+                alt="평균기온과 강수량 각각을 따릉이 일별 이용량과 비교한 Spearman 상관관계 산점도"
+                loading="lazy"
+              />
+              <div class="chart-caption">
+                <h3>Weather is a clue, not a verdict.</h3>
+                <p>temperature / rain / rentals</p>
+              </div>
+            </a>
           </div>
 
           <div class="observation-bar reveal">
             <span class="kicker">Observed</span>
             <p>
               <strong>1월 57,335건 → 6월 163,193건.</strong> 계절 폭이 가장 크고,
-              금요일 평균 133,449건은 일요일 97,294건보다 높다. 그래프에서 먼저
-              확인한 사실을 해석보다 앞에 둔다.
+              금요일 평균 133,449건은 일요일 97,294건보다 높다. 평균기온과 대여량의
+              Spearman ρ는 <strong>+0.526</strong>, 강수량과는 <strong>−0.251</strong>이다.
+              그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
             </p>
           </div>
         </section>
@@ -1075,8 +1094,9 @@
               <h3>비와 저온은 이용의 문턱을 높인다.</h3>
               <p>
                 <strong>관찰:</strong> 비 온 날은 평균 112,464건으로 맑은 날보다
-                13.3% 낮고, 0℃ 이하는 63,039건이다. 계절·요일을 통제한 분석이
-                다음 질문이다.
+                13.3% 낮고, 0℃ 이하는 63,039건이다. Spearman ρ도 기온은
+                <strong>+0.526</strong>, 강수량은 <strong>−0.251</strong>이지만,
+                이는 인과관계가 아니라 다음 검증을 위한 신호다.
               </p>
             </article>
             <article class="insight reveal">

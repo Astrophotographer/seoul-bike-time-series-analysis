@@ -228,6 +228,22 @@ def test_summarize_analysis_reports_period_and_point_count():
     assert summary["point_count"] == 14
 
 
+def test_summarize_analysis_reports_spearman_weather_correlations():
+    frame = pd.DataFrame(
+        {
+            "date": pd.date_range("2023-01-01", periods=4, freq="D"),
+            "rental_count": [10, 20, 30, 40],
+            "mean_temp_c": [1, 2, 3, 4],
+            "precip_mm": [4, 3, 2, 1],
+        }
+    )
+
+    summary = summarize_analysis(frame)
+
+    assert summary["spearman_mean_temp_c_rental"] == pytest.approx(1.0)
+    assert summary["spearman_precip_mm_rental"] == pytest.approx(-1.0)
+
+
 def test_make_plots_creates_required_pngs(tmp_path: Path):
     paths = make_plots(_featured_frame(), tmp_path, include_stl=False)
 
@@ -236,6 +252,7 @@ def test_make_plots_creates_required_pngs(tmp_path: Path):
         "01_daily_trend.png",
         "02_month_weekday_heatmap.png",
         "03_weather_effect.png",
+        "05_correlation.png",
     }.issubset(names)
     assert all(path.exists() for path in paths)
 
@@ -250,7 +267,7 @@ def test_make_plots_handles_missing_weather_values(tmp_path: Path):
     assert len(paths) >= 3
 
 
-def test_run_pipeline_writes_processed_csv_and_three_images(tmp_path: Path):
+def test_run_pipeline_writes_processed_csv_and_five_images(tmp_path: Path):
     bike_dir = tmp_path / "bike"
     bike_dir.mkdir()
     bike_source = bike_dir / "bike_2023.csv"
@@ -281,7 +298,7 @@ def test_run_pipeline_writes_processed_csv_and_three_images(tmp_path: Path):
 
     assert summary["point_count"] == 14
     assert (tmp_path / "data" / "processed_daily_rentals.csv").exists()
-    assert len(list((tmp_path / "images").glob("*.png"))) >= 3
+    assert len(list((tmp_path / "images").glob("*.png"))) >= 5
 
 
 def test_run_pipeline_rejects_missing_bike_directory(tmp_path: Path):

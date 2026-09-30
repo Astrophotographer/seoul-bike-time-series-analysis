@@ -69,7 +69,7 @@ Open-Meteo가 반환한 서울 인근 격자 자료를 보조 변수로 사용�
 - **7일 이동 표준편차**: 기간별 변동성 변화를 확인했다.
 - **월별·요일별 집계**: 계절성과 주간 반복 패턴을 비교했다.
 - **강수 여부·기온 구간 비교**: `precip_mm > 0`을 비가 온 날로, 기온을 `<=0`, `0~10`, `10~20`, `20~30`, `>30`℃로 구분했다.
-- **Spearman 상관계수**: 선형성보다 순위 관계를 확인하는 보조 지표로 사용했다.
+- **Spearman 상관계수·산점도**: 선형성보다 순위 관계를 확인하고, 기온·강수량과 이용량의 방향성을 시각적으로 비교했다.
 - **STL 분해**: `period=7`로 추세·주간 계절성·잔차를 분리했다. 이는 예측 모델이 아니라 구성요소 해석용이다.
 
 ## 6. 시각화 결과
@@ -97,6 +97,12 @@ Open-Meteo가 반환한 서울 인근 격자 자료를 보조 변수로 사용�
 ![STL 시계열 분해](images/04_stl_decomposition.png)
 
 STL의 주간 계절성 성분에서 평일과 주말의 반복 진동이 확인된다. 추세 성분은 겨울 저점과 봄·초여름 상승, 가을 고점, 겨울 하락을 보조적으로 보여준다.
+
+### 6.5 기온·강수량과 이용량의 상관관계
+
+![기온·강수량과 이용량의 Spearman 상관관계](images/05_correlation.png)
+
+평균기온과 일별 이용량의 Spearman 상관계수는 `+0.526`, 강수량과 이용량은 `-0.251`이었다. 즉 이 기간에는 따뜻한 날일수록 이용량이 높은 순위 관계가, 비가 많을수록 이용량이 낮은 순위 관계가 관찰됐다. 다만 두 변수 모두 계절·요일과 함께 변할 수 있으므로, 이 수치만으로 날씨가 이용량을 줄이거나 늘린다는 인과관계를 주장할 수 없다. 상관계수는 방향과 강도를 탐색하는 보조 지표로 사용하고, 다음 단계에서는 월·요일·공휴일을 통제한 분석이 필요하다.
 
 ## 7. 인사이트
 
@@ -159,7 +165,7 @@ pytest -q
 생성 파일:
 
 - 정제·특징 데이터: [data/processed_daily_rentals.csv](data/processed_daily_rentals.csv)
-- 시각화: [images/01_daily_trend.png](images/01_daily_trend.png), [images/02_month_weekday_heatmap.png](images/02_month_weekday_heatmap.png), [images/03_weather_effect.png](images/03_weather_effect.png), [images/04_stl_decomposition.png](images/04_stl_decomposition.png)
+- 시각화: [images/01_daily_trend.png](images/01_daily_trend.png), [images/02_month_weekday_heatmap.png](images/02_month_weekday_heatmap.png), [images/03_weather_effect.png](images/03_weather_effect.png), [images/04_stl_decomposition.png](images/04_stl_decomposition.png), [images/05_correlation.png](images/05_correlation.png)
 - 코드: [analysis.py](analysis.py), [src/bike_analysis.py](src/bike_analysis.py), [scripts/download_weather.py](scripts/download_weather.py)
 
 ## 11. AI 사용 로그
@@ -168,7 +174,7 @@ pytest -q
 |---|---|---|
 | 프로젝트 주제·질문·폴더 구조 초안 | 과제 요구사항을 빠르게 실행 가능한 범위로 구체화 | 질문 4개, 731개 포인트, 필수 산출물 목록을 직접 대조 |
 | CSV 인코딩·컬럼 alias·중복 제거·캘린더 처리 코드 | 반복적인 전처리 구현 시간 절감 및 예외 케이스 탐색 | CP949 fixture와 `대여건수` alias 테스트를 먼저 실패시킨 뒤 통과 확인 |
-| 이동평균·변화율·요일·기온 구간·Spearman·STL·시각화 코드 | 분석 대안 비교와 차트 생성 자동화 | `pytest -q`, 실제 파이프라인 재실행, 생성 CSV와 이미지 파일 존재 확인 |
+| 이동평균·변화율·요일·기온 구간·Spearman 산점도·STL·시각화 코드 | 분석 대안 비교와 차트 생성 자동화 | `pytest -q`, 실제 파이프라인 재실행, 생성 CSV와 이미지 파일 존재 확인 |
 | 인사이트 문장 초안과 보고서 구조 | 관찰·해석·행동을 분리한 문장 구성 | 원본 CSV에서 월·요일·날씨·변화율 수치를 독립 재계산하고 인과 표현을 상관·가설 수준으로 수정 |
 
 최종 결론과 수치 선택은 AI 출력만 그대로 사용하지 않고, 생성된 `processed_daily_rentals.csv`를 다시 집계해 확인했다.

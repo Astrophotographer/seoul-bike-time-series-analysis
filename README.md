@@ -60,6 +60,7 @@ python analysis.py \
 - `images/02_month_weekday_heatmap.png`: 월별·요일별 평균
 - `images/03_weather_effect.png`: 강수·기온 구간별 비교
 - `images/04_stl_decomposition.png`: `statsmodels`가 설치된 경우 생성되는 STL 분해
+- `images/05_correlation.png`: 평균기온·강수량과 이용량의 Spearman 상관 산점도
 
 ## 테스트
 

@@ -328,6 +328,27 @@ def _numeric_dict(series: pd.Series) -> dict[str, float]:
     return {str(key): float(value) for key, value in values.items()}
 
 
+def _spearman_correlation(frame: pd.DataFrame, column: str) -> float | None:
+    if column not in frame.columns or "rental_count" not in frame.columns:
+        return None
+
+    valid = pd.DataFrame(
+        {
+            column: pd.to_numeric(frame[column], errors="coerce"),
+            "rental_count": pd.to_numeric(frame["rental_count"], errors="coerce"),
+        }
+    ).dropna()
+    if (
+        len(valid) < 2
+        or valid[column].nunique(dropna=True) < 2
+        or valid["rental_count"].nunique(dropna=True) < 2
+    ):
+        return None
+
+    correlation = valid[column].corr(valid["rental_count"], method="spearman")
+    return None if pd.isna(correlation) else float(correlation)
+
+
 def summarize_analysis(frame: pd.DataFrame) -> dict[str, object]:
     """Return JSON-serializable summary statistics for the analysis frame."""
 
@@ -385,14 +406,7 @@ def summarize_analysis(frame: pd.DataFrame) -> dict[str, object]:
         summary["rain_comparison"] = {}
 
     for column in ("mean_temp_c", "precip_mm"):
-        if column in frame.columns:
-            valid = pd.DataFrame({column: frame[column], "rental_count": counts}).dropna()
-            correlation = valid[column].corr(valid["rental_count"], method="spearman")
-            summary[f"spearman_{column}_rental"] = (
-                None if pd.isna(correlation) else float(correlation)
-            )
-        else:
-            summary[f"spearman_{column}_rental"] = None
+        summary[f"spearman_{column}_rental"] = _spearman_correlation(frame, column)
 
     return summary
 
@@ -511,6 +525,61 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
     return _save_figure(fig, output_dir / "03_weather_effect.png")
 
 
+def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    plots = (
+        ("mean_temp_c", "Mean temperature (°C)", "Temperature ↔ rentals", "#f6a64b"),
+        ("precip_mm", "Precipitation (mm)", "Rain ↔ rentals", "#4cb6c5"),
+    )
+
+    for axis, (column, xlabel, title, color) in zip(axes, plots):
+        if column not in frame.columns:
+            valid = pd.DataFrame()
+        else:
+            valid = pd.DataFrame(
+                {
+                    column: pd.to_numeric(frame[column], errors="coerce"),
+                    "rental_count": pd.to_numeric(
+                        frame["rental_count"], errors="coerce"
+                    ),
+                }
+            ).dropna()
+
+        if valid.empty:
+            axis.text(0.5, 0.5, "No valid weather data", ha="center", va="center")
+            axis.set_axis_off()
+            continue
+
+        axis.scatter(
+            valid[column],
+            valid["rental_count"],
+            alpha=0.34,
+            color=color,
+            edgecolors="none",
+            s=24,
+        )
+        correlation = _spearman_correlation(frame, column)
+        rho_text = "n/a" if correlation is None else f"{correlation:+.3f}"
+        axis.text(
+            0.04,
+            0.95,
+            f"Spearman ρ = {rho_text}",
+            transform=axis.transAxes,
+            va="top",
+            fontsize=10,
+            bbox={"facecolor": "white", "alpha": 0.82, "edgecolor": "none"},
+        )
+        axis.set_title(title)
+        axis.set_xlabel(xlabel)
+        axis.set_ylabel("Daily rental count")
+        axis.grid(alpha=0.2)
+
+    fig.suptitle("Weather and daily bike rentals: association, not causation")
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 0.94])
+    return _save_figure(fig, output_dir / "05_correlation.png")
+
+
 def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
     if STL is None:
         print("STL skipped: statsmodels is not installed")
@@ -556,6 +625,7 @@ def make_plots(
         _plot_daily_trend(frame, output_path),
         _plot_seasonality_heatmap(frame, output_path),
         _plot_weather_effect(frame, output_path),
+        _plot_correlation(frame, output_path),
     ]
     if include_stl:
         stl_path = _plot_stl(frame, output_path)
