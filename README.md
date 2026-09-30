@@ -2,6 +2,13 @@
 
 2023~2024년 서울시 따릉이 일별 이용량의 추세, 계절성, 날씨와의 연관성, 이상 구간을 분석하는 프로젝트다.
 
+## 웹 대시보드
+
+분석 결과를 차트와 인사이트 카드로 탐색할 수 있는 정적 페이지를 GitHub Pages로 배포했다.
+
+- [라이브 대시보드](https://astrophotographer.github.io/seoul-bike-time-series-analysis/)
+- [GitHub 저장소](https://github.com/Astrophotographer/seoul-bike-time-series-analysis)
+
 ## 실행 환경
 
 - Python 3.10 이상
