@@ -14,7 +14,7 @@
 
 - 분석 기간은 `2023-01-01 ~ 2024-12-31`이다.
 - 핵심 분석 단위는 날짜 1개당 1개 행인 서울시 전체 따릉이 이용량이다.
-- 기상 보조 데이터는 서울 관측 지점 108번의 일평균기온과 일강수량을 사용한다.
+- 기상 보조 데이터는 서울 중심 좌표 인근 격자의 일평균기온과 일강수량을 사용한다.
 - 원본에 기록이 없는 날짜를 자동으로 이용량 0으로 채우지 않고 누락 여부를 표시한다.
 - 통계적 이상치는 기본적으로 삭제하지 않고 표시·검토한다.
 - 이동평균, 계절성 집계, 변화율·변동성 중 2가지 이상을 적용한다.
@@ -279,7 +279,7 @@
 
 **Files:**
 - Create: `REPORT.md`
-- Create or add locally: `data/raw/bike/*.csv`, `data/raw/weather_seoul_108.csv` when license·용량상 허용되는 경우
+- Create or add locally: `data/raw/bike/*.csv`, `data/raw/weather_seoul_open_meteo.csv` when license·용량상 허용되는 경우
 - Create: `data/processed_daily_rentals.csv`
 - Create: `images/01_daily_trend.png`
 - Create: `images/02_month_weekday_heatmap.png`
@@ -292,7 +292,7 @@
 
 - [ ] **Step 1: 공식 원본 파일을 `data/raw/`에 저장하거나 수집 방법을 확인**
 
-  서울시 공식 페이지에서 2023·2024년 파일을 내려받고, 기상청에서 지점 108의 일별 평균기온·강수량을 내려받는다. 파일명과 다운로드 날짜를 `data/README.md`에 기록한다. 원본을 저장하지 못하면 정제 결과와 재수집 절차를 반드시 남긴다.
+  서울시 공식 페이지에서 2023·2024년 파일을 내려받고, Open-Meteo Historical Weather API에서 서울 중심 좌표의 일별 평균기온·강수량을 내려받는다. 파일명과 다운로드 날짜를 `data/README.md`에 기록한다. 원본을 저장하지 못하면 정제 결과와 재수집 절차를 반드시 남긴다.
 
 - [ ] **Step 2: 실제 파이프라인 실행**
 
@@ -347,4 +347,3 @@
   Run: `git status --short`, `git diff --check`, `git log --oneline --max-count=8`
 
   Expected: 의도하지 않은 파일이 없고 공백 오류가 없으며 필요한 커밋이 존재한다.
-

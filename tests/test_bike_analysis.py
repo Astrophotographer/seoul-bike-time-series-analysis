@@ -45,6 +45,16 @@ def test_normalize_bike_columns_rejects_missing_required_column():
         normalize_bike_columns(frame)
 
 
+def test_normalize_bike_columns_accepts_daily_rental_count_alias():
+    frame = pd.DataFrame(
+        {"대여일자": ["2023-01-01"], "대여건수": [7]}
+    )
+
+    normalized = normalize_bike_columns(frame)
+
+    assert normalized["rental_count"].tolist() == [7]
+
+
 def test_aggregate_bike_files_sums_by_date_and_removes_exact_duplicates(
     tmp_path: Path,
 ):
@@ -68,6 +78,19 @@ def test_aggregate_bike_files_sums_by_date_and_removes_exact_duplicates(
     ]
     assert daily["rental_count"].tolist() == [7, 5]
     assert audit["duplicate_rows"] == 1
+
+
+def test_aggregate_bike_files_accepts_cp949_source(tmp_path: Path):
+    source = tmp_path / "bike_cp949.csv"
+    pd.DataFrame(
+        [{"대여일자": "2023-01-01", "이용건수": 7}]
+    ).to_csv(source, index=False, encoding="cp949")
+
+    daily, _ = aggregate_bike_files(
+        [source], start="2023-01-01", end="2023-01-01"
+    )
+
+    assert daily["rental_count"].tolist() == [7]
 
 
 def test_complete_calendar_marks_missing_dates_without_zero_fill():
@@ -110,6 +133,22 @@ def test_merge_weather_keeps_bike_dates_when_weather_is_missing():
     ].iloc[0]
     assert pd.isna(missing_weather["mean_temp_c"])
     assert missing_weather["rental_count"] == 20
+
+
+def test_normalize_weather_columns_accepts_open_meteo_names():
+    frame = pd.DataFrame(
+        {
+            "time": ["2023-01-01"],
+            "temperature_2m_mean": [2.5],
+            "precipitation_sum": [0.0],
+        }
+    )
+
+    normalized = normalize_weather_columns(frame)
+
+    assert normalized["date"].tolist() == ["2023-01-01"]
+    assert normalized["mean_temp_c"].tolist() == [2.5]
+    assert normalized["precip_mm"].tolist() == [0.0]
 
 
 def test_add_features_computes_weekly_metrics():

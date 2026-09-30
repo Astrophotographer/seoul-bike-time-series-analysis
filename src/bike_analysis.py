@@ -19,19 +19,27 @@ except ImportError:  # pragma: no cover - depends on the local environment
 
 _BIKE_COLUMN_ALIASES = {
     "date": ("date", "대여일자", "대여일시"),
-    "rental_count": ("rental_count", "이용건수", "이용 건수"),
+    "rental_count": (
+        "rental_count",
+        "이용건수",
+        "이용 건수",
+        "대여건수",
+        "대여 건수",
+    ),
 }
 
 _WEATHER_COLUMN_ALIASES = {
-    "date": ("date", "일시", "일자", "날짜", "관측일자"),
+    "date": ("date", "time", "일시", "일자", "날짜", "관측일자"),
     "mean_temp_c": (
         "mean_temp_c",
+        "temperature_2m_mean",
         "평균기온",
         "평균기온(℃)",
         "평균기온(°C)",
     ),
     "precip_mm": (
         "precip_mm",
+        "precipitation_sum",
         "일강수량",
         "일강수량(mm)",
         "강수량",
@@ -106,6 +114,18 @@ def _empty_daily_frame() -> pd.DataFrame:
     )
 
 
+def read_source_csv(path: Path) -> pd.DataFrame:
+    """Read UTF-8 or Korean legacy-encoded source CSV files."""
+
+    decode_errors: list[UnicodeDecodeError] = []
+    for encoding in ("utf-8-sig", "cp949", "euc-kr"):
+        try:
+            return pd.read_csv(path, encoding=encoding, low_memory=False)
+        except UnicodeDecodeError as error:
+            decode_errors.append(error)
+    raise decode_errors[-1]
+
+
 def aggregate_bike_files(
     paths: Sequence[Path], start: str, end: str
 ) -> tuple[pd.DataFrame, dict[str, int]]:
@@ -132,7 +152,7 @@ def aggregate_bike_files(
         if not path.exists():
             raise FileNotFoundError(f"따릉이 원본 파일을 찾을 수 없습니다: {path}")
 
-        raw = pd.read_csv(path, encoding="utf-8-sig", low_memory=False)
+        raw = read_source_csv(path)
         audit["files_read"] += 1
         audit["rows_read"] += len(raw)
 
@@ -376,7 +396,7 @@ def _add_source_footer(fig: plt.Figure) -> None:
     fig.text(
         0.01,
         0.01,
-        "Source: Seoul public bike usage data; period follows the input data",
+        "Sources: Seoul public bike usage data; Open-Meteo weather when available",
         ha="left",
         va="bottom",
         fontsize=8,

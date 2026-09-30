@@ -7,3 +7,7 @@ __pycache__/
 
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/bike/
+data/raw/bike/*
+!data/raw/bike/*.csv
+!data/raw/weather_seoul_open_meteo.csv

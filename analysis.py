@@ -17,6 +17,7 @@ from src.bike_analysis import (
     make_plots,
     merge_weather,
     normalize_weather_columns,
+    read_source_csv,
     summarize_analysis,
 )
 
@@ -46,7 +47,7 @@ def run_pipeline(
         weather_path = Path(weather_path)
         if not weather_path.exists():
             raise FileNotFoundError(f"기상 원본 파일을 찾을 수 없습니다: {weather_path}")
-        weather_raw = pd.read_csv(weather_path, encoding="utf-8-sig", low_memory=False)
+        weather_raw = read_source_csv(weather_path)
         weather = normalize_weather_columns(weather_raw)
         frame = merge_weather(frame, weather)
 

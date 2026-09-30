@@ -22,19 +22,23 @@ pip install -r requirements.txt
 ```text
 data/raw/
 ├── bike/
-│   ├── 2023년 상반기 CSV
-│   ├── 2023년 하반기 CSV
-│   ├── 2024년 상반기 CSV
-│   └── 2024년 하반기 CSV
-└── weather_seoul_108.csv
+│   ├── 2023_h1_status.csv
+│   ├── 2023_h2_status.csv
+│   ├── 2024_h1_status.csv
+│   └── 2024_h2_status.csv
+└── weather_seoul_open_meteo.csv
 ```
+
+기상 원본은 현재 `weather_seoul_open_meteo.csv`를 사용한다. 자세한 출처와 재수집 명령은 [data/README.md](data/README.md)를 확인한다.
+
+기상 파일을 다시 만들 때는 `python scripts/download_weather.py --output data/raw/weather_seoul_open_meteo.csv`를 실행한다.
 
 ## 분석 실행
 
 ```bash
 python analysis.py \
   --bike-dir data/raw/bike \
-  --weather data/raw/weather_seoul_108.csv \
+  --weather data/raw/weather_seoul_open_meteo.csv \
   --output-dir . \
   --start 2023-01-01 \
   --end 2024-12-31
