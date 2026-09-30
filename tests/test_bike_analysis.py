@@ -8,9 +8,11 @@ from src.bike_analysis import (
     aggregate_bike_files,
     complete_calendar,
     flag_outliers,
+    make_plots,
     merge_weather,
     normalize_bike_columns,
     normalize_weather_columns,
+    summarize_analysis,
 )
 
 
@@ -155,3 +157,46 @@ def test_flag_outliers_marks_but_does_not_drop_extreme_row():
 
     assert len(flagged) == len(frame)
     assert bool(flagged.loc[flagged["rental_count"] == 1000, "outlier_flag"].iloc[0])
+
+
+def _featured_frame(days: int = 35) -> pd.DataFrame:
+    base = pd.DataFrame(
+        {
+            "date": pd.date_range("2023-01-01", periods=days, freq="D"),
+            "rental_count": [100 + index * 3 for index in range(days)],
+            "mean_temp_c": [5 + (index % 20) for index in range(days)],
+            "precip_mm": [0.0 if index % 3 else 2.0 for index in range(days)],
+            "record_missing": [False] * days,
+        }
+    )
+    return add_features(base)
+
+
+def test_summarize_analysis_reports_period_and_point_count():
+    summary = summarize_analysis(_featured_frame(days=14))
+
+    assert summary["start_date"] == "2023-01-01"
+    assert summary["end_date"] == "2023-01-14"
+    assert summary["point_count"] == 14
+
+
+def test_make_plots_creates_required_pngs(tmp_path: Path):
+    paths = make_plots(_featured_frame(), tmp_path, include_stl=False)
+
+    names = {path.name for path in paths}
+    assert {
+        "01_daily_trend.png",
+        "02_month_weekday_heatmap.png",
+        "03_weather_effect.png",
+    }.issubset(names)
+    assert all(path.exists() for path in paths)
+
+
+def test_make_plots_handles_missing_weather_values(tmp_path: Path):
+    frame = _featured_frame()
+    frame.loc[0:4, ["mean_temp_c", "precip_mm", "rain_flag", "temperature_bin"]] = pd.NA
+
+    paths = make_plots(frame, tmp_path, include_stl=False)
+
+    assert (tmp_path / "01_daily_trend.png").exists()
+    assert len(paths) >= 3

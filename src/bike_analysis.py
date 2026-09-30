@@ -3,7 +3,18 @@
 from pathlib import Path
 from typing import Sequence
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
+
+try:
+    from statsmodels.tsa.seasonal import STL
+except ImportError:  # pragma: no cover - depends on the local environment
+    STL = None  # type: ignore[assignment,misc]
 
 
 _BIKE_COLUMN_ALIASES = {
@@ -279,3 +290,250 @@ def flag_outliers(frame: pd.DataFrame, threshold: float = 3.5) -> pd.DataFrame:
 
     result["outlier_flag"] = flags.fillna(False).astype(bool)
     return result
+
+
+def _date_string(value: object) -> str | None:
+    if pd.isna(value):
+        return None
+    return pd.Timestamp(value).strftime("%Y-%m-%d")
+
+
+def _numeric_dict(series: pd.Series) -> dict[str, float]:
+    values = series.dropna()
+    return {str(key): float(value) for key, value in values.items()}
+
+
+def summarize_analysis(frame: pd.DataFrame) -> dict[str, object]:
+    """Return JSON-serializable summary statistics for the analysis frame."""
+
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    counts = pd.to_numeric(frame["rental_count"], errors="coerce")
+    summary: dict[str, object] = {
+        "start_date": _date_string(dates.min()),
+        "end_date": _date_string(dates.max()),
+        "point_count": int(len(frame)),
+        "valid_rental_count": int(counts.notna().sum()),
+        "record_missing_count": int(
+            frame.get("record_missing", pd.Series(False, index=frame.index))
+            .fillna(False)
+            .astype(bool)
+            .sum()
+        ),
+        "outlier_count": int(
+            frame.get("outlier_flag", pd.Series(False, index=frame.index))
+            .fillna(False)
+            .astype(bool)
+            .sum()
+        ),
+    }
+
+    if {"mean_temp_c", "precip_mm"}.issubset(frame.columns):
+        summary["weather_missing_count"] = int(
+            frame[["mean_temp_c", "precip_mm"]].isna().any(axis=1).sum()
+        )
+    else:
+        summary["weather_missing_count"] = int(len(frame))
+
+    working = pd.DataFrame(
+        {
+            "date": dates,
+            "rental_count": counts,
+        }
+    ).dropna(subset=["date", "rental_count"])
+    working["month"] = working["date"].dt.month
+    working["weekday"] = working["date"].dt.weekday
+    summary["monthly_mean"] = _numeric_dict(
+        working.groupby("month")["rental_count"].mean()
+    )
+    summary["weekday_mean"] = _numeric_dict(
+        working.groupby("weekday")["rental_count"].mean()
+    )
+
+    if "rain_flag" in frame.columns:
+        rain_frame = pd.DataFrame(
+            {"rental_count": counts, "rain_flag": frame["rain_flag"]}
+        ).dropna()
+        summary["rain_comparison"] = _numeric_dict(
+            rain_frame.groupby("rain_flag")["rental_count"].mean()
+        )
+    else:
+        summary["rain_comparison"] = {}
+
+    for column in ("mean_temp_c", "precip_mm"):
+        if column in frame.columns:
+            valid = pd.DataFrame({column: frame[column], "rental_count": counts}).dropna()
+            correlation = valid[column].corr(valid["rental_count"], method="spearman")
+            summary[f"spearman_{column}_rental"] = (
+                None if pd.isna(correlation) else float(correlation)
+            )
+        else:
+            summary[f"spearman_{column}_rental"] = None
+
+    return summary
+
+
+def _add_source_footer(fig: plt.Figure) -> None:
+    fig.text(
+        0.01,
+        0.01,
+        "Source: Seoul public bike usage data; period follows the input data",
+        ha="left",
+        va="bottom",
+        fontsize=8,
+        color="dimgray",
+    )
+
+
+def _save_figure(fig: plt.Figure, path: Path) -> Path:
+    fig.savefig(path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
+def _plot_daily_trend(frame: pd.DataFrame, output_dir: Path) -> Path:
+    fig, ax = plt.subplots(figsize=(12, 5))
+    dates = pd.to_datetime(frame["date"], errors="coerce")
+    counts = pd.to_numeric(frame["rental_count"], errors="coerce")
+    ax.plot(dates, counts, color="#9aa6b2", linewidth=0.8, label="Daily rentals")
+    rolling = frame.get("rolling_7d", counts.rolling(7, min_periods=7).mean())
+    ax.plot(dates, rolling, color="#1565c0", linewidth=2, label="7-day moving average")
+    ax.set_title("Seoul public bike daily rentals and 7-day moving average")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Rental count")
+    ax.legend()
+    ax.grid(alpha=0.2)
+    fig.autofmt_xdate()
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
+    return _save_figure(fig, output_dir / "01_daily_trend.png")
+
+
+def _plot_seasonality_heatmap(frame: pd.DataFrame, output_dir: Path) -> Path:
+    working = frame.copy()
+    working["date"] = pd.to_datetime(working["date"], errors="coerce")
+    working["rental_count"] = pd.to_numeric(working["rental_count"], errors="coerce")
+    working["month"] = working["date"].dt.month
+    working["weekday"] = working["date"].dt.weekday
+    pivot = working.pivot_table(
+        index="month",
+        columns="weekday",
+        values="rental_count",
+        aggfunc="mean",
+    ).reindex(index=range(1, 13), columns=range(7))
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(pivot, cmap="YlGnBu", annot=False, linewidths=0.3, ax=ax)
+    ax.set_title("Mean bike rentals by month and weekday")
+    ax.set_xlabel("Weekday (Monday=0)")
+    ax.set_ylabel("Month")
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
+    return _save_figure(fig, output_dir / "02_month_weekday_heatmap.png")
+
+
+def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    weather_available = {"rental_count", "rain_flag", "temperature_bin"}.issubset(
+        frame.columns
+    )
+
+    if weather_available:
+        weather_frame = frame[["rental_count", "rain_flag", "temperature_bin"]].copy()
+        weather_frame["rental_count"] = pd.to_numeric(
+            weather_frame["rental_count"], errors="coerce"
+        )
+        rain_frame = weather_frame.dropna(subset=["rental_count", "rain_flag"])
+        temp_frame = weather_frame.dropna(subset=["rental_count", "temperature_bin"])
+
+        if not rain_frame.empty:
+            sns.boxplot(
+                data=rain_frame,
+                x="rain_flag",
+                y="rental_count",
+                ax=axes[0],
+                color="#90caf9",
+            )
+            axes[0].set_xlabel("Rain flag (False = no rain)")
+            axes[0].set_ylabel("Rental count")
+        else:
+            axes[0].text(0.5, 0.5, "No valid precipitation data", ha="center", va="center")
+            axes[0].set_axis_off()
+
+        if not temp_frame.empty:
+            order = ["<=0", "0~10", "10~20", "20~30", ">30"]
+            sns.boxplot(
+                data=temp_frame,
+                x="temperature_bin",
+                y="rental_count",
+                order=order,
+                ax=axes[1],
+                color="#ffcc80",
+            )
+            axes[1].set_xlabel("Mean temperature bin (C)")
+            axes[1].set_ylabel("Rental count")
+            axes[1].tick_params(axis="x", rotation=20)
+        else:
+            axes[1].text(0.5, 0.5, "No valid temperature data", ha="center", va="center")
+            axes[1].set_axis_off()
+    else:
+        for axis in axes:
+            axis.text(0.5, 0.5, "No weather data", ha="center", va="center")
+            axis.set_axis_off()
+
+    fig.suptitle("Bike rentals by weather condition")
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 0.94])
+    return _save_figure(fig, output_dir / "03_weather_effect.png")
+
+
+def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
+    if STL is None:
+        print("STL skipped: statsmodels is not installed")
+        return None
+
+    series = frame[["date", "rental_count"]].copy()
+    series["date"] = pd.to_datetime(series["date"], errors="coerce")
+    series["rental_count"] = pd.to_numeric(series["rental_count"], errors="coerce")
+    series = series.dropna().drop_duplicates("date").sort_values("date")
+    if len(series) < 14:
+        print("STL skipped: at least 14 valid daily observations are required")
+        return None
+
+    indexed = series.set_index("date")["rental_count"].asfreq("D")
+    indexed = indexed.interpolate(limit_direction="both")
+    result = STL(indexed, period=7, robust=True).fit()
+    components = {
+        "Observed": result.observed,
+        "Trend": result.trend,
+        "Weekly seasonality": result.seasonal,
+        "Residual": result.resid,
+    }
+    fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
+    for axis, (label, values) in zip(axes, components.items()):
+        axis.plot(values.index, values.values, linewidth=0.8)
+        axis.set_ylabel(label)
+        axis.grid(alpha=0.2)
+    axes[-1].set_xlabel("Date")
+    fig.suptitle("STL decomposition of daily bike rentals (weekly period)")
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 0.96])
+    return _save_figure(fig, output_dir / "04_stl_decomposition.png")
+
+
+def make_plots(
+    frame: pd.DataFrame, output_dir: Path, include_stl: bool = True
+) -> list[Path]:
+    """Create required analysis charts and return the generated paths."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    paths = [
+        _plot_daily_trend(frame, output_path),
+        _plot_seasonality_heatmap(frame, output_path),
+        _plot_weather_effect(frame, output_path),
+    ]
+    if include_stl:
+        stl_path = _plot_stl(frame, output_path)
+        if stl_path is not None:
+            paths.append(stl_path)
+    return paths
