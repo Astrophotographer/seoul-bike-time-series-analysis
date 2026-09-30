@@ -290,6 +290,11 @@ def flag_outliers(frame: pd.DataFrame, threshold: float = 3.5) -> pd.DataFrame:
 
     result = frame.copy()
     values = pd.to_numeric(result["rental_count"], errors="coerce")
+    valid_mask = values.notna()
+    if not valid_mask.any():
+        result["outlier_flag"] = False
+        return result
+
     median = values.median()
     deviations = (values - median).abs()
     mad = deviations.median()
@@ -308,7 +313,7 @@ def flag_outliers(frame: pd.DataFrame, threshold: float = 3.5) -> pd.DataFrame:
         else:
             flags = values.ne(median)
 
-    result["outlier_flag"] = flags.fillna(False).astype(bool)
+    result["outlier_flag"] = (flags.fillna(False) & valid_mask).astype(bool)
     return result
 
 

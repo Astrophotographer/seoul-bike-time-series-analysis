@@ -199,6 +199,14 @@ def test_flag_outliers_marks_but_does_not_drop_extreme_row():
     assert bool(flagged.loc[flagged["rental_count"] == 1000, "outlier_flag"].iloc[0])
 
 
+def test_flag_outliers_does_not_mark_missing_rental_counts():
+    frame = pd.DataFrame({"rental_count": [pd.NA, pd.NA]})
+
+    flagged = flag_outliers(frame)
+
+    assert flagged["outlier_flag"].tolist() == [False, False]
+
+
 def _featured_frame(days: int = 35) -> pd.DataFrame:
     base = pd.DataFrame(
         {
