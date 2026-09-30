@@ -11,6 +11,23 @@ _BIKE_COLUMN_ALIASES = {
     "rental_count": ("rental_count", "이용건수", "이용 건수"),
 }
 
+_WEATHER_COLUMN_ALIASES = {
+    "date": ("date", "일시", "일자", "날짜", "관측일자"),
+    "mean_temp_c": (
+        "mean_temp_c",
+        "평균기온",
+        "평균기온(℃)",
+        "평균기온(°C)",
+    ),
+    "precip_mm": (
+        "precip_mm",
+        "일강수량",
+        "일강수량(mm)",
+        "강수량",
+        "강수량(mm)",
+    ),
+}
+
 
 def normalize_bike_columns(frame: pd.DataFrame) -> pd.DataFrame:
     """Normalize the source date and rental-count columns."""
@@ -35,6 +52,38 @@ def normalize_bike_columns(frame: pd.DataFrame) -> pd.DataFrame:
         )
 
     return normalized.rename(columns=rename_map)
+
+
+def _normalize_columns(
+    frame: pd.DataFrame, aliases: dict[str, tuple[str, ...]]
+) -> pd.DataFrame:
+    normalized = frame.copy()
+    normalized.columns = [str(column).strip() for column in normalized.columns]
+
+    rename_map: dict[str, str] = {}
+    missing: list[str] = []
+    for target, candidates in aliases.items():
+        match = next(
+            (column for column in normalized.columns if column in candidates), None
+        )
+        if match is None:
+            missing.append(candidates[1] if len(candidates) > 1 else target)
+        else:
+            rename_map[match] = target
+
+    if missing:
+        columns = ", ".join(map(str, normalized.columns))
+        missing_columns = ", ".join(missing)
+        raise ValueError(
+            f"필수 컬럼이 없습니다: {missing_columns}; 현재 컬럼: {columns}"
+        )
+    return normalized.rename(columns=rename_map)
+
+
+def normalize_weather_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Normalize weather export columns to date, temperature, and precipitation."""
+
+    return _normalize_columns(frame, _WEATHER_COLUMN_ALIASES)
 
 
 def _empty_daily_frame() -> pd.DataFrame:
@@ -140,7 +189,93 @@ def complete_calendar(
     return completed
 
 
-def add_features(frame: pd.DataFrame) -> pd.DataFrame:
-    """Return an empty feature result until feature engineering is added."""
+def merge_weather(daily: pd.DataFrame, weather: pd.DataFrame) -> pd.DataFrame:
+    """Left join normalized weather observations onto the bike date series."""
 
-    return pd.DataFrame()
+    bike = daily.copy()
+    bike["date"] = pd.to_datetime(bike["date"], errors="coerce").dt.normalize()
+
+    observations = weather.copy()
+    observations["date"] = pd.to_datetime(
+        observations["date"], errors="coerce"
+    ).dt.normalize()
+    observations["mean_temp_c"] = pd.to_numeric(
+        observations["mean_temp_c"], errors="coerce"
+    )
+    observations["precip_mm"] = pd.to_numeric(
+        observations["precip_mm"], errors="coerce"
+    )
+    observations = observations.dropna(subset=["date"])
+    observations = observations.groupby("date", as_index=False, sort=True).agg(
+        mean_temp_c=("mean_temp_c", "mean"),
+        precip_mm=("precip_mm", "mean"),
+    )
+
+    return bike.merge(observations, on="date", how="left", validate="one_to_one")
+
+
+def add_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Add calendar, rolling, weather, and change-rate features."""
+
+    result = frame.copy()
+    result["date"] = pd.to_datetime(result["date"], errors="coerce").dt.normalize()
+    result = result.sort_values("date").reset_index(drop=True)
+    counts = pd.to_numeric(result["rental_count"], errors="coerce")
+
+    result["rolling_7d"] = counts.rolling(window=7, min_periods=7).mean()
+    result["pct_change"] = counts.pct_change()
+    result["rolling_std_7d"] = counts.rolling(window=7, min_periods=7).std()
+    result["weekday"] = result["date"].dt.weekday
+    weekday_names = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+    result["weekday_name"] = result["weekday"].map(
+        dict(enumerate(weekday_names))
+    )
+    result["month"] = result["date"].dt.month
+
+    if "precip_mm" in result:
+        result["rain_flag"] = result["precip_mm"].map(
+            lambda value: pd.NA if pd.isna(value) else bool(value > 0)
+        ).astype("boolean")
+    else:
+        result["rain_flag"] = pd.Series(pd.NA, index=result.index, dtype="boolean")
+
+    if "mean_temp_c" in result:
+        temperature = pd.to_numeric(result["mean_temp_c"], errors="coerce")
+        result["temperature_bin"] = pd.cut(
+            temperature,
+            bins=[-float("inf"), 0, 10, 20, 30, float("inf")],
+            labels=["<=0", "0~10", "10~20", "20~30", ">30"],
+            include_lowest=True,
+        )
+    else:
+        result["temperature_bin"] = pd.Categorical(
+            [pd.NA] * len(result), categories=["<=0", "0~10", "10~20", "20~30", ">30"]
+        )
+    return result
+
+
+def flag_outliers(frame: pd.DataFrame, threshold: float = 3.5) -> pd.DataFrame:
+    """Flag robust outliers without removing any input rows."""
+
+    result = frame.copy()
+    values = pd.to_numeric(result["rental_count"], errors="coerce")
+    median = values.median()
+    deviations = (values - median).abs()
+    mad = deviations.median()
+
+    if pd.notna(mad) and mad > 0:
+        robust_z = 0.6745 * (values - median) / mad
+        flags = robust_z.abs().gt(threshold)
+    else:
+        q1 = values.quantile(0.25)
+        q3 = values.quantile(0.75)
+        iqr = q3 - q1
+        if pd.notna(iqr) and iqr > 0:
+            lower = q1 - 1.5 * iqr
+            upper = q3 + 1.5 * iqr
+            flags = values.lt(lower) | values.gt(upper)
+        else:
+            flags = values.ne(median)
+
+    result["outlier_flag"] = flags.fillna(False).astype(bool)
+    return result
