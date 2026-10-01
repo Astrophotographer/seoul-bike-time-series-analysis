@@ -1,6 +1,6 @@
 # 서울시 따릉이 시계열 분석
 
-2023~2024년 서울시 따릉이 일별 이용량의 추세, 계절성, 날씨와의 연관성, 이상 구간을 분석하는 프로젝트다.
+2023년 1월부터 2026년 6월까지 서울시 따릉이 일별 이용량의 추세, 계절성, 날씨와의 연관성, 이상 구간을 분석하는 프로젝트다.
 
 ## 웹 대시보드
 
@@ -32,13 +32,16 @@ data/raw/
 │   ├── 2023_h1_status.csv
 │   ├── 2023_h2_status.csv
 │   ├── 2024_h1_status.csv
-│   └── 2024_h2_status.csv
+│   ├── 2024_h2_status.csv
+│   ├── 2025_h1_status.csv
+│   ├── 2025_h2_status.csv
+│   └── 2026_h1_status.csv
 └── weather_seoul_open_meteo.csv
 ```
 
 기상 원본은 현재 `weather_seoul_open_meteo.csv`를 사용한다. 자세한 출처와 재수집 명령은 [data/README.md](data/README.md)를 확인한다.
 
-기상 파일을 다시 만들 때는 `python scripts/download_weather.py --output data/raw/weather_seoul_open_meteo.csv`를 실행한다.
+기상 파일을 다시 만들 때는 `python scripts/download_weather.py --start 2023-01-01 --end 2026-06-30 --output data/raw/weather_seoul_open_meteo.csv`를 실행한다.
 
 ## 분석 실행
 
@@ -48,7 +51,7 @@ python analysis.py \
   --weather data/raw/weather_seoul_open_meteo.csv \
   --output-dir . \
   --start 2023-01-01 \
-  --end 2024-12-31
+  --end 2026-06-30
 ```
 
 날씨 데이터 없이 따릉이 단일 시계열만 실행하려면 `--weather` 옵션을 생략한다.

@@ -75,7 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Download daily Seoul weather for the bike analysis."
     )
     parser.add_argument("--start", default="2023-01-01")
-    parser.add_argument("--end", default="2024-12-31")
+    parser.add_argument("--end", default="2026-06-30")
     parser.add_argument(
         "--output",
         type=Path,

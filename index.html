@@ -6,9 +6,9 @@
     <meta name="theme-color" content="#0b1020" />
     <meta
       name="description"
-      content="2023~2024년 서울시 따릉이 일별 이용량 시계열 분석 인터랙티브 리포트"
+      content="2023년 1월부터 2026년 6월까지 서울시 따릉이 일별 이용량을 분석한 인터랙티브 리포트"
     />
-    <title>서울시 따릉이 / 시계열 분석 2023—24</title>
+    <title>서울시 따릉이 / 시계열 분석 2023—2026.06</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -887,7 +887,7 @@
         </a>
         <div class="header-note">
           <span class="live-dot" aria-hidden="true"></span>
-          <span>분석 완료 · 2023—24</span>
+          <span>분석 완료 · 2023—2026.06</span>
         </div>
       </header>
 
@@ -897,7 +897,7 @@
             <div class="eyebrow">서울 · 공공자전거 · 시계열</div>
             <h1 id="hero-title">도시를 움직이는 건<br /><em>무엇일까?</em></h1>
             <p class="hero-copy">
-              731일의 서울시 따릉이 이용량을 따라가며 도시의 리듬을 읽었다.
+              1,277일의 서울시 따릉이 이용량을 따라가며 도시의 리듬을 읽었다.
               <strong>계절, 요일, 날씨</strong>가 수요를 어떻게 흔드는지—그래프 뒤의
               의미를 데이터로 확인하는 분석 노트.
             </p>
@@ -913,33 +913,33 @@
             </div>
           </div>
 
-          <div class="hero-visual reveal" aria-label="2023년부터 2024년까지의 분석 기간">
-            <div class="orbit-label top"><span>분석 기간</span><strong>24</strong><span>개월 관측</span></div>
+          <div class="hero-visual reveal" aria-label="2023년 1월부터 2026년 6월까지의 분석 기간">
+            <div class="orbit-label top"><span>분석 기간</span><strong>42</strong><span>개월 관측</span></div>
             <div class="orbit-label side">신호 / 계절 / 날씨 / 잡음</div>
             <div class="pulse" aria-hidden="true"></div>
-            <div class="orbit-label bottom"><span>일별 데이터</span><strong>731</strong><span>하나의 도시, 하나의 리듬</span></div>
+            <div class="orbit-label bottom"><span>일별 데이터</span><strong>1,277</strong><span>하나의 도시, 하나의 리듬</span></div>
           </div>
         </section>
 
         <section class="stat-strip reveal" aria-label="핵심 분석 결과">
           <div class="metric">
             <span class="metric-label">관측일</span>
-            <span class="metric-value">731</span>
-            <p class="metric-detail">2023.01 — 2024.12</p>
+            <span class="metric-value">1,277</span>
+            <p class="metric-detail">2023.01 — 2026.06</p>
           </div>
           <div class="metric">
             <span class="metric-label">계절 변동폭</span>
-            <span class="metric-value">2.85×</span>
+            <span class="metric-value">2.70×</span>
             <p class="metric-detail">1월 → 6월 평균</p>
           </div>
           <div class="metric">
             <span class="metric-label">강수일 차이</span>
-            <span class="metric-value">−13.3%</span>
+            <span class="metric-value">−10.5%</span>
             <p class="metric-detail">비 오는 날 대비 맑은 날</p>
           </div>
           <div class="metric">
             <span class="metric-label">요일별 신호</span>
-            <span class="metric-value">+37.2%</span>
+            <span class="metric-value">+32.6%</span>
             <p class="metric-detail">금요일 대비 일요일</p>
           </div>
         </section>
@@ -967,7 +967,7 @@
               <div class="chart-meta"><span>01 / 움직임</span><span>X축: 날짜 · 7일 평활</span></div>
               <img
                 src="images/01_daily_trend.png"
-                alt="2023년과 2024년 서울시 따릉이 일별 이용량 및 7일 이동평균"
+                alt="2023년 1월부터 2026년 6월까지 서울시 따릉이 일별 이용량 및 7일 이동평균"
                 loading="lazy"
               />
               <div class="chart-caption">
@@ -1070,11 +1070,11 @@
           <div class="observation-bar reveal">
             <span class="kicker">관찰 결과</span>
             <p>
-              <strong>1월 57,335건 → 6월 163,193건.</strong> 계절 폭이 가장 크고,
-              금요일 평균 133,449건은 일요일 97,294건보다 높다. 평균기온과 대여량의
-              스피어만 상관계수 ρ는 <strong>+0.526</strong>, 강수량과는 <strong>−0.251</strong>이다.
-              28일 기준선 예측의 평균절대오차(MAE)는 <strong>23,535건</strong>, 평균절대백분율오차(MAPE)는
-              <strong>32.3%</strong>였다. 그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
+              <strong>1월 55,282건 → 6월 149,021건.</strong> 계절 폭은 2.70배이고,
+              금요일 평균 121,865건은 일요일 91,898건보다 32.6% 높다. 평균기온과 대여량의
+              스피어만 상관계수 ρ는 <strong>+0.571</strong>, 강수량과는 <strong>−0.209</strong>이다.
+              28일 기준선 예측의 평균절대오차(MAE)는 <strong>20,420건</strong>, 평균절대백분율오차(MAPE)는
+              <strong>23.9%</strong>였다. 그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
             </p>
           </div>
         </section>
@@ -1096,7 +1096,7 @@
               <span class="insight-number">01 / 계절성</span>
               <h3>계절성은 수요의 바닥선을 다시 그린다.</h3>
               <p>
-                <strong>관찰:</strong> 6월 평균은 1월의 2.85배다. 기온·일조시간과
+                <strong>관찰:</strong> 6월 평균은 1월의 2.70배다. 기온·일조시간과
                 운영 정책이 함께 움직였을 가능성이 있어, 예측에는 월별 기준선이
                 필요하다.
               </p>
@@ -1105,7 +1105,7 @@
               <span class="insight-number">02 / 요일</span>
               <h3>금요일에 평일 이동의 잔상이 남는다.</h3>
               <p>
-                <strong>관찰:</strong> 금요일 133,449건은 일요일보다 37.2% 높다.
+                <strong>관찰:</strong> 금요일 121,865건은 일요일보다 32.6% 높다.
                 출퇴근 수요 가설은 시간대·공휴일·대여소 데이터로 검증해야 한다.
               </p>
             </article>
@@ -1113,9 +1113,9 @@
               <span class="insight-number">03 / 날씨</span>
               <h3>비와 저온은 이용의 문턱을 높인다.</h3>
               <p>
-                <strong>관찰:</strong> 비 온 날은 평균 112,464건으로 맑은 날보다
-                13.3% 낮고, 0℃ 이하는 63,039건이다. 스피어만 상관계수 ρ도 기온은
-                <strong>+0.526</strong>, 강수량은 <strong>−0.251</strong>이지만,
+                <strong>관찰:</strong> 비 온 날은 평균 106,278건으로 맑은 날보다
+                10.5% 낮고, 0℃ 이하는 58,579건이다. 스피어만 상관계수 ρ도 기온은
+                <strong>+0.571</strong>, 강수량은 <strong>−0.209</strong>이지만,
                 이는 인과관계가 아니라 다음 검증을 위한 신호다.
               </p>
             </article>
@@ -1132,8 +1132,17 @@
               <h3>주간 리듬은 기준선이지 답은 아니다.</h3>
               <p>
                 <strong>관찰:</strong> 마지막 28일 검증 구간에서 7일 계절성 기준선의
-                평균절대오차(MAE)는 23,535건, 평균절대백분율오차(MAPE)는 32.3%였다. 요일 반복은 따라가지만 날씨·휴일의
+                평균절대오차(MAE)는 20,420건, 평균절대백분율오차(MAPE)는 23.9%였다. 요일 반복은 따라가지만 날씨·휴일의
                 급격한 변화를 설명하기에는 부족하다.
+              </p>
+            </article>
+            <article class="insight reveal">
+              <span class="insight-number">06 / 연도별 변화</span>
+              <h3>2025년부터 평균 수준이 낮아졌다.</h3>
+              <p>
+                <strong>관찰:</strong> 연도별 일평균은 2023년 123,028건, 2024년
+                119,808건, 2025년 102,392건이다. 2026년 상반기는 99,331건으로,
+                하반기가 빠진 부분 연도라는 점을 함께 봐야 한다.
               </p>
             </article>
           </div>
@@ -1145,7 +1154,7 @@
               <span class="section-index">03 / 방법과 한계</span>
               <h2 id="method-title">숫자를,<br /><span>한계와 함께 본다.</span></h2>
               <p>
-                서울 열린데이터광장의 서울시 전체 일별 대여건수 731개에 서울 중심
+                서울 열린데이터광장의 서울시 전체 일별 대여건수 1,277개에 서울 중심
                 격자의 Open-Meteo 일평균기온·강수량을 결합했다. 날짜를 정렬하고,
                 결측·중복·음수 이용량을 점검했으며, 이상치는 삭제하지 않고 표시로
                 남겼다. 이 페이지의 차트와 문장은 재현 가능한 Python 파이프라인에서
@@ -1187,7 +1196,7 @@
             <div class="source-label">출처와 재현 방법</div>
             <p class="source-copy">
               따릉이 원자료는
-              <a href="https://data.seoul.go.kr/dataList/OA-14994/F/1/datasetView.do" target="_blank" rel="noreferrer">서울 열린데이터광장</a>,
+              <a href="https://data.seoul.go.kr/dataList/OA-14994/A/1/datasetView.do" target="_blank" rel="noreferrer">서울 열린데이터광장</a>,
               기상 보조자료는
               <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">Open-Meteo 과거 기상 API</a>에서 수집했다.
               원자료의 이용 조건과 분석 한계는 전체 리포트에서 확인할 수 있다.

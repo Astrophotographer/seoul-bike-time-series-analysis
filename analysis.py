@@ -88,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--weather", dest="weather_path", type=Path)
     parser.add_argument("--output-dir", type=Path, default=Path("."))
     parser.add_argument("--start", default="2023-01-01")
-    parser.add_argument("--end", default="2024-12-31")
+    parser.add_argument("--end", default="2026-06-30")
     return parser
 
 
