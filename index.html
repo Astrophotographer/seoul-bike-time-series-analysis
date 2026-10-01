@@ -8,7 +8,7 @@
       name="description"
       content="2023~2024년 서울시 따릉이 일별 이용량 시계열 분석 인터랙티브 리포트"
     />
-    <title>Seoul Bike / Time Series 2023—24</title>
+    <title>서울시 따릉이 / 시계열 분석 2023—24</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -29,8 +29,8 @@
         --coral: #ff876e;
         --violet: #b3a0ff;
         --mono: "DM Mono", "SFMono-Regular", Consolas, monospace;
-        --display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-        --body: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        --display: "Fraunces", "Apple SD Gothic Neo", "Noto Serif KR", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+        --body: "Avenir Next", "Apple SD Gothic Neo", "Noto Sans KR", "Noto Sans CJK KR", "Helvetica Neue", Helvetica, Arial, sans-serif;
       }
 
       * {
@@ -881,77 +881,77 @@
   <body>
     <div class="shell">
       <header class="site-header">
-        <a class="brand" href="index.html" aria-label="Seoul Bike time series home">
+        <a class="brand" href="index.html" aria-label="서울시 따릉이 시계열 분석 홈">
           <span class="brand-mark">↗</span>
-          <span>Seoul Bike / Field Note 01</span>
+          <span>서울시 따릉이 / 분석 노트 01</span>
         </a>
         <div class="header-note">
           <span class="live-dot" aria-hidden="true"></span>
-          <span>Analysis complete · 2023—24</span>
+          <span>분석 완료 · 2023—24</span>
         </div>
       </header>
 
       <main>
         <section class="hero" aria-labelledby="hero-title">
           <div class="reveal">
-            <div class="eyebrow">Seoul · public bike · time series</div>
-            <h1 id="hero-title">What moves<br /><em>a city?</em></h1>
+            <div class="eyebrow">서울 · 공공자전거 · 시계열</div>
+            <h1 id="hero-title">도시를 움직이는 건<br /><em>무엇일까?</em></h1>
             <p class="hero-copy">
               731일의 서울시 따릉이 이용량을 따라가며 도시의 리듬을 읽었다.
               <strong>계절, 요일, 날씨</strong>가 수요를 어떻게 흔드는지—그래프 뒤의
               의미를 데이터로 확인하는 분석 노트.
             </p>
             <div class="hero-actions">
-              <a class="button" href="#charts">Explore the evidence <span>↓</span></a>
+              <a class="button" href="#charts">분석 결과 보기 <span>↓</span></a>
               <a
                 class="text-link"
                 href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis/blob/main/REPORT.md"
                 target="_blank"
                 rel="noreferrer"
-                >Read full report</a
+                >전체 리포트 읽기</a
               >
             </div>
           </div>
 
-          <div class="hero-visual reveal" aria-label="Analysis period from 2023 to 2024">
-            <div class="orbit-label top"><span>window</span><strong>24</strong><span>months observed</span></div>
-            <div class="orbit-label side">signal / season / weather / noise</div>
+          <div class="hero-visual reveal" aria-label="2023년부터 2024년까지의 분석 기간">
+            <div class="orbit-label top"><span>분석 기간</span><strong>24</strong><span>개월 관측</span></div>
+            <div class="orbit-label side">신호 / 계절 / 날씨 / 잡음</div>
             <div class="pulse" aria-hidden="true"></div>
-            <div class="orbit-label bottom"><span>daily points</span><strong>731</strong><span>one city, one rhythm</span></div>
+            <div class="orbit-label bottom"><span>일별 데이터</span><strong>731</strong><span>하나의 도시, 하나의 리듬</span></div>
           </div>
         </section>
 
-        <section class="stat-strip reveal" aria-label="Key findings">
+        <section class="stat-strip reveal" aria-label="핵심 분석 결과">
           <div class="metric">
-            <span class="metric-label">observations</span>
+            <span class="metric-label">관측일</span>
             <span class="metric-value">731</span>
             <p class="metric-detail">2023.01 — 2024.12</p>
           </div>
           <div class="metric">
-            <span class="metric-label">seasonal range</span>
+            <span class="metric-label">계절 변동폭</span>
             <span class="metric-value">2.85×</span>
-            <p class="metric-detail">January → June average</p>
+            <p class="metric-detail">1월 → 6월 평균</p>
           </div>
           <div class="metric">
-            <span class="metric-label">rain-day delta</span>
+            <span class="metric-label">강수일 차이</span>
             <span class="metric-value">−13.3%</span>
-            <p class="metric-detail">rain vs. no rain</p>
+            <p class="metric-detail">비 오는 날 대비 맑은 날</p>
           </div>
           <div class="metric">
-            <span class="metric-label">weekday signal</span>
+            <span class="metric-label">요일별 신호</span>
             <span class="metric-value">+37.2%</span>
-            <p class="metric-detail">Friday vs. Sunday</p>
+            <p class="metric-detail">금요일 대비 일요일</p>
           </div>
         </section>
 
         <section class="section" id="charts" aria-labelledby="evidence-title">
           <div class="section-heading reveal">
-            <span class="section-index">01 / The evidence</span>
+            <span class="section-index">01 / 데이터의 관찰</span>
             <div>
-              <h2 id="evidence-title">A city has<br /><span>a rhythm.</span></h2>
+              <h2 id="evidence-title">도시에는<br /><span>리듬이 있다.</span></h2>
               <p>
                 일별 노이즈를 그대로 믿지 않고 7일 이동평균, 월·요일 집계, 날씨 구간,
-                STL 분해, 7일 baseline 예측을 겹쳐 보았다. 같은 숫자도 어떤 렌즈로
+                STL 분해, 7일 기준선 예측을 겹쳐 보았다. 같은 숫자도 어떤 렌즈로
                 보느냐에 따라 다른 질문을 만든다.
               </p>
             </div>
@@ -964,15 +964,15 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>01 / movement</span><span>X축: 날짜 · 7-day smooth</span></div>
+              <div class="chart-meta"><span>01 / 움직임</span><span>X축: 날짜 · 7일 평활</span></div>
               <img
                 src="images/01_daily_trend.png"
                 alt="2023년과 2024년 서울시 따릉이 일별 이용량 및 7일 이동평균"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Winter is low. Spring wakes up.</h3>
-                <p>daily rentals / rolling mean</p>
+                <h3>겨울은 낮고, 봄은 깨어난다.</h3>
+                <p>일별 대여건수 / 이동평균</p>
               </div>
             </a>
 
@@ -982,15 +982,15 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>02 / repetition</span><span>X축: 요일 · Y축: 월</span></div>
+              <div class="chart-meta"><span>02 / 반복</span><span>X축: 요일 · Y축: 월</span></div>
               <img
                 src="images/02_month_weekday_heatmap.png"
                 alt="월별 및 요일별 따릉이 평균 이용량 히트맵"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Friday has a pulse.</h3>
-                <p>average rentals</p>
+                <h3>금요일에는 맥박이 뛴다.</h3>
+                <p>평균 대여건수</p>
               </div>
             </a>
 
@@ -1000,15 +1000,15 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>03 / friction</span><span>X축: 비 여부 · 기온 구간</span></div>
+              <div class="chart-meta"><span>03 / 제약</span><span>X축: 강수 여부 · 기온 구간</span></div>
               <img
                 src="images/03_weather_effect.png"
                 alt="비 여부와 기온 구간별 따릉이 평균 이용량 비교"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Weather changes the invitation.</h3>
-                <p>rain / temperature bins</p>
+                <h3>날씨가 이용의 문턱을 바꾼다.</h3>
+                <p>강수 / 기온 구간</p>
               </div>
             </a>
 
@@ -1018,15 +1018,15 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>04 / decomposition</span><span>X축: 날짜 · STL / 7일</span></div>
+              <div class="chart-meta"><span>04 / 분해</span><span>X축: 날짜 · STL / 7일</span></div>
               <img
                 src="images/04_stl_decomposition.png"
                 alt="서울시 따릉이 이용량의 추세, 주간 계절성, 잔차를 분리한 STL 시계열 분해"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Trend, rhythm, residue.</h3>
-                <p>trend / seasonal / residual</p>
+                <h3>추세, 리듬, 잔차.</h3>
+                <p>추세 / 계절성 / 잔차</p>
               </div>
             </a>
 
@@ -1036,15 +1036,15 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>05 / association</span><span>X축: 기온 · 강수량</span></div>
+              <div class="chart-meta"><span>05 / 연관성</span><span>X축: 기온 · 강수량</span></div>
               <img
                 src="images/05_correlation.png"
-                alt="평균기온과 강수량 각각을 따릉이 일별 이용량과 비교한 Spearman 상관관계 산점도"
+                alt="평균기온과 강수량 각각을 따릉이 일별 이용량과 비교한 스피어만 상관관계 산점도"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Weather is a clue, not a verdict.</h3>
-                <p>temperature / rain / rentals</p>
+                <h3>날씨는 단서이지 판결문이 아니다.</h3>
+                <p>기온 / 강수량 / 대여건수</p>
               </div>
             </a>
 
@@ -1054,26 +1054,26 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>06 / forecast</span><span>X축: 날짜 · 28-day holdout</span></div>
+              <div class="chart-meta"><span>06 / 예측</span><span>X축: 날짜 · 28일 검증</span></div>
               <img
                 src="images/06_baseline_forecast.png"
-                alt="마지막 28일을 검증 구간으로 둔 7일 계절성 naive baseline 예측과 실제 따릉이 이용량 비교"
+                alt="마지막 28일을 검증 구간으로 둔 7일 계절성 기준선 예측과 실제 따릉이 이용량 비교"
                 loading="lazy"
               />
               <div class="chart-caption">
-                <h3>Can a simple rhythm forecast the next month?</h3>
-                <p>X-axis: calendar date · actual / baseline</p>
+                <h3>단순한 리듬으로 다음 달을 예측할 수 있을까?</h3>
+                <p>X축: 날짜 · 실제값 / 기준선</p>
               </div>
             </a>
           </div>
 
           <div class="observation-bar reveal">
-            <span class="kicker">Observed</span>
+            <span class="kicker">관찰 결과</span>
             <p>
               <strong>1월 57,335건 → 6월 163,193건.</strong> 계절 폭이 가장 크고,
               금요일 평균 133,449건은 일요일 97,294건보다 높다. 평균기온과 대여량의
-              Spearman ρ는 <strong>+0.526</strong>, 강수량과는 <strong>−0.251</strong>이다.
-              28일 baseline 예측의 MAE는 <strong>23,535건</strong>, MAPE는
+              스피어만 상관계수 ρ는 <strong>+0.526</strong>, 강수량과는 <strong>−0.251</strong>이다.
+              28일 기준선 예측의 평균절대오차(MAE)는 <strong>23,535건</strong>, 평균절대백분율오차(MAPE)는
               <strong>32.3%</strong>였다. 그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
             </p>
           </div>
@@ -1081,11 +1081,11 @@
 
         <section class="section" aria-labelledby="insights-title">
           <div class="section-heading reveal">
-            <span class="section-index">02 / Reading the signal</span>
+            <span class="section-index">02 / 신호 읽기</span>
             <div>
-              <h2 id="insights-title">The graph is<br /><span>not the answer.</span></h2>
+              <h2 id="insights-title">그래프는<br /><span>정답이 아니다.</span></h2>
               <p>
-                관찰(Fact)과 해석(Hypothesis)을 분리했다. 인과를 단정하는 대신 다음
+                관찰과 해석을 분리했다. 인과를 단정하는 대신 다음
                 의사결정과 실험으로 이어질 수 있는 문장으로 바꿨다.
               </p>
             </div>
@@ -1093,16 +1093,16 @@
 
           <div class="insights">
             <article class="insight reveal">
-              <span class="insight-number">01 / seasonality</span>
+              <span class="insight-number">01 / 계절성</span>
               <h3>계절성은 수요의 바닥선을 다시 그린다.</h3>
               <p>
                 <strong>관찰:</strong> 6월 평균은 1월의 2.85배다. 기온·일조시간과
-                운영 정책이 함께 움직였을 가능성이 있어, 예측에는 월별 baseline이
+                운영 정책이 함께 움직였을 가능성이 있어, 예측에는 월별 기준선이
                 필요하다.
               </p>
             </article>
             <article class="insight reveal">
-              <span class="insight-number">02 / weekday</span>
+              <span class="insight-number">02 / 요일</span>
               <h3>금요일에 평일 이동의 잔상이 남는다.</h3>
               <p>
                 <strong>관찰:</strong> 금요일 133,449건은 일요일보다 37.2% 높다.
@@ -1110,17 +1110,17 @@
               </p>
             </article>
             <article class="insight reveal">
-              <span class="insight-number">03 / weather</span>
+              <span class="insight-number">03 / 날씨</span>
               <h3>비와 저온은 이용의 문턱을 높인다.</h3>
               <p>
                 <strong>관찰:</strong> 비 온 날은 평균 112,464건으로 맑은 날보다
-                13.3% 낮고, 0℃ 이하는 63,039건이다. Spearman ρ도 기온은
+                13.3% 낮고, 0℃ 이하는 63,039건이다. 스피어만 상관계수 ρ도 기온은
                 <strong>+0.526</strong>, 강수량은 <strong>−0.251</strong>이지만,
                 이는 인과관계가 아니라 다음 검증을 위한 신호다.
               </p>
             </article>
             <article class="insight reveal">
-              <span class="insight-number">04 / anomalies</span>
+              <span class="insight-number">04 / 이상 구간</span>
               <h3>급락은 삭제할 값이 아니라 확인할 사건이다.</h3>
               <p>
                 <strong>관찰:</strong> 2023-08-10은 전일 대비 약 94% 급감했고 강수량은
@@ -1128,11 +1128,11 @@
               </p>
             </article>
             <article class="insight reveal">
-              <span class="insight-number">05 / forecast</span>
+              <span class="insight-number">05 / 예측</span>
               <h3>주간 리듬은 기준선이지 답은 아니다.</h3>
               <p>
-                <strong>관찰:</strong> 마지막 28일 holdout에서 7일 seasonal naive의
-                MAE는 23,535건, MAPE는 32.3%였다. 요일 반복은 따라가지만 날씨·휴일의
+                <strong>관찰:</strong> 마지막 28일 검증 구간에서 7일 계절성 기준선의
+                평균절대오차(MAE)는 23,535건, 평균절대백분율오차(MAPE)는 32.3%였다. 요일 반복은 따라가지만 날씨·휴일의
                 급격한 변화를 설명하기에는 부족하다.
               </p>
             </article>
@@ -1142,39 +1142,39 @@
         <section class="section" aria-labelledby="method-title">
           <div class="method-grid">
             <div class="method-copy reveal">
-              <span class="section-index">03 / Method & edges</span>
-              <h2 id="method-title">Numbers,<br /><span>with their edges visible.</span></h2>
+              <span class="section-index">03 / 방법과 한계</span>
+              <h2 id="method-title">숫자를,<br /><span>한계와 함께 본다.</span></h2>
               <p>
                 서울 열린데이터광장의 서울시 전체 일별 대여건수 731개에 서울 중심
                 격자의 Open-Meteo 일평균기온·강수량을 결합했다. 날짜를 정렬하고,
-                결측·중복·음수 이용량을 점검했으며, 이상치는 삭제하지 않고 flag로
+                결측·중복·음수 이용량을 점검했으며, 이상치는 삭제하지 않고 표시로
                 남겼다. 이 페이지의 차트와 문장은 재현 가능한 Python 파이프라인에서
                 생성됐다.
               </p>
-              <div class="method-tags" aria-label="Methods used">
-                <span class="method-tag">7d rolling mean</span>
-                <span class="method-tag">pct change</span>
-                <span class="method-tag">weekday × month</span>
-                <span class="method-tag">spearman</span>
-                <span class="method-tag">STL / period 7</span>
-                <span class="method-tag">7d seasonal naive</span>
-                <span class="method-tag">28d holdout</span>
+              <div class="method-tags" aria-label="적용한 분석 방법">
+                <span class="method-tag">7일 이동평균</span>
+                <span class="method-tag">전일 대비 변화율</span>
+                <span class="method-tag">요일 × 월</span>
+                <span class="method-tag">스피어만 상관</span>
+                <span class="method-tag">STL / 주기 7</span>
+                <span class="method-tag">7일 계절성 기준선</span>
+                <span class="method-tag">28일 검증</span>
               </div>
             </div>
 
             <div class="reading-guide reveal">
-              <h3>How to read this note</h3>
+              <h3>이 노트를 읽는 법</h3>
               <div class="guide-item">
                 <span class="guide-symbol">01</span>
-                <span><strong>Observe</strong><span>그래프에서 확인되는 수치와 구간</span></span>
+                <span><strong>관찰</strong><span>그래프에서 확인되는 수치와 구간</span></span>
               </div>
               <div class="guide-item">
                 <span class="guide-symbol">02</span>
-                <span><strong>Interpret</strong><span>가능한 원인 가설과 반례</span></span>
+                <span><strong>해석</strong><span>가능한 원인 가설과 반례</span></span>
               </div>
               <div class="guide-item">
                 <span class="guide-symbol">03</span>
-                <span><strong>Act</strong><span>다음 검증과 의사결정 제안</span></span>
+                <span><strong>행동</strong><span>다음 검증과 의사결정 제안</span></span>
               </div>
             </div>
           </div>
@@ -1184,19 +1184,19 @@
       <footer class="site-footer">
         <div class="footer-grid">
           <div>
-            <div class="source-label">Sources & reproducibility</div>
+            <div class="source-label">출처와 재현 방법</div>
             <p class="source-copy">
               따릉이 원자료는
               <a href="https://data.seoul.go.kr/dataList/OA-14994/F/1/datasetView.do" target="_blank" rel="noreferrer">서울 열린데이터광장</a>,
               기상 보조자료는
-              <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">Open-Meteo Historical API</a>에서 수집했다.
+              <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">Open-Meteo 과거 기상 API</a>에서 수집했다.
               원자료의 이용 조건과 분석 한계는 전체 리포트에서 확인할 수 있다.
             </p>
           </div>
-          <nav class="footer-links" aria-label="Project links">
-            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis" target="_blank" rel="noreferrer">GitHub ↗</a>
-            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis/blob/main/REPORT.md" target="_blank" rel="noreferrer">Report ↗</a>
-            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis/blob/main/analysis.py" target="_blank" rel="noreferrer">Python ↗</a>
+          <nav class="footer-links" aria-label="프로젝트 링크">
+            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis" target="_blank" rel="noreferrer">저장소 ↗</a>
+            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis/blob/main/REPORT.md" target="_blank" rel="noreferrer">전체 리포트 ↗</a>
+            <a href="https://github.com/Astrophotographer/seoul-bike-time-series-analysis/blob/main/analysis.py" target="_blank" rel="noreferrer">분석 코드 ↗</a>
           </nav>
         </div>
       </footer>

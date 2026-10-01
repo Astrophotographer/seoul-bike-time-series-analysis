@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 import seaborn as sns
 import pandas as pd
 
@@ -15,6 +16,39 @@ try:
     from statsmodels.tsa.seasonal import STL
 except ImportError:  # pragma: no cover - depends on the local environment
     STL = None  # type: ignore[assignment,misc]
+
+
+def _configure_korean_font() -> None:
+    """Prefer an installed Korean font so generated chart text is readable."""
+
+    font_paths = (
+        Path("/System/Library/Fonts/AppleSDGothicNeo.ttc"),
+        Path("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+        Path("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
+        Path("/Library/Fonts/Arial Unicode.ttf"),
+    )
+    for font_path in font_paths:
+        if not font_path.exists():
+            continue
+        try:
+            font_manager.fontManager.addfont(str(font_path))
+            font_name = font_manager.FontProperties(fname=str(font_path)).get_name()
+            plt.rcParams["font.family"] = font_name
+            break
+        except (OSError, RuntimeError):
+            continue
+    else:
+        plt.rcParams["font.family"] = [
+            "Apple SD Gothic Neo",
+            "Noto Sans CJK KR",
+            "Noto Sans KR",
+            "Arial Unicode MS",
+            "DejaVu Sans",
+        ]
+    plt.rcParams["axes.unicode_minus"] = False
+
+
+_configure_korean_font()
 
 
 _BIKE_COLUMN_ALIASES = {
@@ -480,7 +514,7 @@ def _add_source_footer(fig: plt.Figure) -> None:
     fig.text(
         0.01,
         0.01,
-        "Sources: Seoul public bike usage data; Open-Meteo weather when available",
+        "출처: 서울시 따릉이 이용 데이터 · 기상 보조자료는 Open-Meteo",
         ha="left",
         va="bottom",
         fontsize=8,
@@ -498,12 +532,12 @@ def _plot_daily_trend(frame: pd.DataFrame, output_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(12, 5))
     dates = pd.to_datetime(frame["date"], errors="coerce")
     counts = pd.to_numeric(frame["rental_count"], errors="coerce")
-    ax.plot(dates, counts, color="#9aa6b2", linewidth=0.8, label="Daily rentals")
+    ax.plot(dates, counts, color="#9aa6b2", linewidth=0.8, label="일별 대여건수")
     rolling = frame.get("rolling_7d", counts.rolling(7, min_periods=7).mean())
-    ax.plot(dates, rolling, color="#1565c0", linewidth=2, label="7-day moving average")
-    ax.set_title("Seoul public bike daily rentals and 7-day moving average")
-    ax.set_xlabel("X axis: calendar date")
-    ax.set_ylabel("Y axis: daily rental count")
+    ax.plot(dates, rolling, color="#1565c0", linewidth=2, label="7일 이동평균")
+    ax.set_title("서울시 따릉이 일별 이용량과 7일 이동평균")
+    ax.set_xlabel("X축: 날짜")
+    ax.set_ylabel("Y축: 일별 대여건수")
     ax.legend()
     ax.grid(alpha=0.2)
     fig.autofmt_xdate()
@@ -527,9 +561,11 @@ def _plot_seasonality_heatmap(frame: pd.DataFrame, output_dir: Path) -> Path:
 
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.heatmap(pivot, cmap="YlGnBu", annot=False, linewidths=0.3, ax=ax)
-    ax.set_title("Mean bike rentals by month and weekday")
-    ax.set_xlabel("X axis: weekday (Monday=0, Sunday=6)")
-    ax.set_ylabel("Y axis: month (1-12)")
+    ax.set_title("월·요일별 따릉이 평균 이용량")
+    ax.set_xlabel("X축: 요일")
+    ax.set_ylabel("Y축: 월")
+    ax.set_xticklabels(["월", "화", "수", "목", "금", "토", "일"])
+    ax.set_yticklabels([f"{month}월" for month in range(1, 13)], rotation=0)
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 1])
     return _save_figure(fig, output_dir / "02_month_weekday_heatmap.png")
@@ -546,21 +582,24 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
         weather_frame["rental_count"] = pd.to_numeric(
             weather_frame["rental_count"], errors="coerce"
         )
-        rain_frame = weather_frame.dropna(subset=["rental_count", "rain_flag"])
+        rain_frame = weather_frame.dropna(subset=["rental_count", "rain_flag"]).copy()
+        rain_frame["rain_label"] = rain_frame["rain_flag"].map(
+            {False: "비 없음", True: "비 있음"}
+        )
         temp_frame = weather_frame.dropna(subset=["rental_count", "temperature_bin"])
 
         if not rain_frame.empty:
             sns.boxplot(
                 data=rain_frame,
-                x="rain_flag",
+                x="rain_label",
                 y="rental_count",
                 ax=axes[0],
                 color="#90caf9",
             )
-            axes[0].set_xlabel("X axis: rain flag (False = no rain)")
-            axes[0].set_ylabel("Y axis: daily rental count")
+            axes[0].set_xlabel("X축: 강수 여부")
+            axes[0].set_ylabel("Y축: 일별 대여건수")
         else:
-            axes[0].text(0.5, 0.5, "No valid precipitation data", ha="center", va="center")
+            axes[0].text(0.5, 0.5, "유효한 강수 데이터 없음", ha="center", va="center")
             axes[0].set_axis_off()
 
         if not temp_frame.empty:
@@ -573,18 +612,21 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
                 ax=axes[1],
                 color="#ffcc80",
             )
-            axes[1].set_xlabel("X axis: mean temperature bin (C)")
-            axes[1].set_ylabel("Y axis: daily rental count")
+            axes[1].set_xlabel("X축: 평균기온 구간 (℃)")
+            axes[1].set_ylabel("Y축: 일별 대여건수")
+            axes[1].set_xticklabels(
+                ["0℃ 이하", "0~10℃", "10~20℃", "20~30℃", "30℃ 초과"]
+            )
             axes[1].tick_params(axis="x", rotation=20)
         else:
-            axes[1].text(0.5, 0.5, "No valid temperature data", ha="center", va="center")
+            axes[1].text(0.5, 0.5, "유효한 기온 데이터 없음", ha="center", va="center")
             axes[1].set_axis_off()
     else:
         for axis in axes:
-            axis.text(0.5, 0.5, "No weather data", ha="center", va="center")
+            axis.text(0.5, 0.5, "기상 데이터 없음", ha="center", va="center")
             axis.set_axis_off()
 
-    fig.suptitle("Bike rentals by weather condition")
+    fig.suptitle("날씨 조건별 따릉이 이용량")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 0.94])
     return _save_figure(fig, output_dir / "03_weather_effect.png")
@@ -593,8 +635,8 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
 def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     plots = (
-        ("mean_temp_c", "X axis: mean temperature (C)", "Temperature ↔ rentals", "#f6a64b"),
-        ("precip_mm", "X axis: precipitation (mm)", "Rain ↔ rentals", "#4cb6c5"),
+        ("mean_temp_c", "X축: 평균기온 (℃)", "평균기온과 대여량", "#f6a64b"),
+        ("precip_mm", "X축: 강수량 (mm)", "강수량과 대여량", "#4cb6c5"),
     )
 
     for axis, (column, xlabel, title, color) in zip(axes, plots):
@@ -611,7 +653,7 @@ def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
             ).dropna()
 
         if valid.empty:
-            axis.text(0.5, 0.5, "No valid weather data", ha="center", va="center")
+            axis.text(0.5, 0.5, "유효한 기상 데이터 없음", ha="center", va="center")
             axis.set_axis_off()
             continue
 
@@ -628,7 +670,7 @@ def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
         axis.text(
             0.04,
             0.95,
-            f"Spearman ρ = {rho_text}",
+            f"스피어만 상관계수 ρ = {rho_text}",
             transform=axis.transAxes,
             va="top",
             fontsize=10,
@@ -636,10 +678,10 @@ def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
         )
         axis.set_title(title)
         axis.set_xlabel(xlabel)
-        axis.set_ylabel("Y axis: daily rental count")
+        axis.set_ylabel("Y축: 일별 대여건수")
         axis.grid(alpha=0.2)
 
-    fig.suptitle("Weather and daily bike rentals: association, not causation")
+    fig.suptitle("날씨와 일별 따릉이 이용량: 연관성과 인과관계는 다름")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 0.94])
     return _save_figure(fig, output_dir / "05_correlation.png")
@@ -656,7 +698,7 @@ def _plot_baseline_forecast(
             frame, horizon=horizon, seasonal_period=seasonal_period
         )
     except ValueError as error:
-        print(f"Baseline forecast skipped: {error}")
+        print(f"기준선 예측 생략: {error}")
         return None
 
     series = frame[["date", "rental_count"]].copy()
@@ -677,14 +719,14 @@ def _plot_baseline_forecast(
         train["rental_count"],
         color="#9aa6b2",
         linewidth=1.1,
-        label="Actual · train context",
+        label="실제값 · 학습 구간",
     )
     ax.plot(
         forecast["date"],
         forecast["actual"],
         color="#1565c0",
         linewidth=2,
-        label="Actual · holdout",
+        label="실제값 · 검증 구간",
     )
     ax.plot(
         forecast["date"],
@@ -694,18 +736,21 @@ def _plot_baseline_forecast(
         linestyle="--",
         marker="o",
         markersize=3,
-        label="7-day seasonal naive",
+        label="7일 계절성 기준선",
     )
     ax.axvspan(
         forecast["date"].iloc[0],
         forecast["date"].iloc[-1],
         color="#f6b85f",
         alpha=0.09,
-        label="28-day holdout",
+        label="28일 검증 구간",
     )
     mape = metrics["mape"]
-    mape_text = "n/a" if mape is None else f"{mape:.1f}%"
-    metric_text = f"MAE {metrics['mae']:,.0f} · MAPE {mape_text}"
+    mape_text = "계산 불가" if mape is None else f"{mape:.1f}%"
+    metric_text = (
+        f"평균절대오차(MAE) {metrics['mae']:,.0f} · "
+        f"평균절대백분율오차(MAPE) {mape_text}"
+    )
     ax.text(
         0.98,
         0.96,
@@ -716,9 +761,9 @@ def _plot_baseline_forecast(
         fontsize=10,
         bbox={"facecolor": "white", "alpha": 0.82, "edgecolor": "none"},
     )
-    ax.set_title("28-day baseline forecast (7-day seasonal naive)")
-    ax.set_xlabel("X axis: calendar date")
-    ax.set_ylabel("Y axis: daily rental count")
+    ax.set_title("28일 기준선 예측 (7일 계절성 반복)")
+    ax.set_xlabel("X축: 날짜")
+    ax.set_ylabel("Y축: 일별 대여건수")
     ax.legend(loc="upper left")
     ax.grid(alpha=0.2)
     fig.autofmt_xdate()
@@ -729,7 +774,7 @@ def _plot_baseline_forecast(
 
 def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
     if STL is None:
-        print("STL skipped: statsmodels is not installed")
+        print("STL 생략: statsmodels가 설치되지 않았습니다")
         return None
 
     series = frame[["date", "rental_count"]].copy()
@@ -737,25 +782,25 @@ def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
     series["rental_count"] = pd.to_numeric(series["rental_count"], errors="coerce")
     series = series.dropna().drop_duplicates("date").sort_values("date")
     if len(series) < 14:
-        print("STL skipped: at least 14 valid daily observations are required")
+        print("STL 생략: 유효한 일별 관측값이 14개 이상 필요합니다")
         return None
 
     indexed = series.set_index("date")["rental_count"].asfreq("D")
     indexed = indexed.interpolate(limit_direction="both")
     result = STL(indexed, period=7, robust=True).fit()
     components = {
-        "Observed": result.observed,
-        "Trend": result.trend,
-        "Weekly seasonality": result.seasonal,
-        "Residual": result.resid,
+        "관측값": result.observed,
+        "추세": result.trend,
+        "주간 계절성": result.seasonal,
+        "잔차": result.resid,
     }
     fig, axes = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
     for axis, (label, values) in zip(axes, components.items()):
         axis.plot(values.index, values.values, linewidth=0.8)
         axis.set_ylabel(label)
         axis.grid(alpha=0.2)
-    axes[-1].set_xlabel("X axis: calendar date")
-    fig.suptitle("STL decomposition of daily bike rentals (weekly period)")
+    axes[-1].set_xlabel("X축: 날짜")
+    fig.suptitle("일별 따릉이 이용량 STL 분해 (주간 주기)")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 0.96])
     return _save_figure(fig, output_dir / "04_stl_decomposition.png")

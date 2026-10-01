@@ -13,7 +13,7 @@
 
 ## 기상 원본
 
-기상청 다운로드에 로그인 절차가 필요한 환경에서도 재현할 수 있도록 [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)를 사용했다. 서울 중심 좌표 `37.5665, 126.9780`을 API에 전달하고, API가 반환한 서울 인근 격자의 2023-01-01~2024-12-31 일별 자료를 `data/raw/weather_seoul_open_meteo.csv`에 저장한다.
+기상청 다운로드에 로그인 절차가 필요한 환경에서도 재현할 수 있도록 [Open-Meteo 과거 기상 API](https://open-meteo.com/en/docs/historical-weather-api)를 사용했다. 서울 중심 좌표 `37.5665, 126.9780`을 API에 전달하고, API가 반환한 서울 인근 격자의 2023-01-01~2024-12-31 일별 자료를 `data/raw/weather_seoul_open_meteo.csv`에 저장한다.
 
 재수집 명령:
 

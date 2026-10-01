@@ -59,9 +59,9 @@ python analysis.py \
 - `images/01_daily_trend.png`: 일별 이용량과 7일 이동평균
 - `images/02_month_weekday_heatmap.png`: 월별·요일별 평균
 - `images/03_weather_effect.png`: 강수·기온 구간별 비교
-- `images/04_stl_decomposition.png`: `statsmodels`가 설치된 경우 생성되는 STL 분해
-- `images/05_correlation.png`: 평균기온·강수량과 이용량의 Spearman 상관 산점도
-- `images/06_baseline_forecast.png`: 마지막 28일 holdout의 7일 계절성 naive baseline 예측
+- `images/04_stl_decomposition.png`: `statsmodels`가 설치된 경우 생성되는 STL 시계열 분해
+- `images/05_correlation.png`: 평균기온·강수량과 이용량의 스피어만 상관관계 산점도
+- `images/06_baseline_forecast.png`: 마지막 28일 검증 구간의 7일 계절성 기준선 예측
 
 ## 테스트
 
