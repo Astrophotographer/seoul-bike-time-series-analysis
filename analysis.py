@@ -14,10 +14,12 @@ from src.bike_analysis import (
     aggregate_bike_files,
     complete_calendar,
     flag_outliers,
+    make_baseline_forecast,
     make_plots,
     merge_weather,
     normalize_weather_columns,
     read_source_csv,
+    summarize_forecast,
     summarize_analysis,
 )
 
@@ -64,6 +66,12 @@ def run_pipeline(
 
     summary = summarize_analysis(frame)
     summary["ingestion_audit"] = audit
+    try:
+        baseline_forecast = make_baseline_forecast(frame)
+    except ValueError:
+        summary["baseline_forecast"] = None
+    else:
+        summary["baseline_forecast"] = summarize_forecast(baseline_forecast)
     summary["generated_plots"] = [
         str(path.relative_to(output_dir))
         for path in make_plots(frame, image_dir, include_stl=True)

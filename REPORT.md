@@ -71,6 +71,7 @@ Open-Meteo가 반환한 서울 인근 격자 자료를 보조 변수로 사용�
 - **강수 여부·기온 구간 비교**: `precip_mm > 0`을 비가 온 날로, 기온을 `<=0`, `0~10`, `10~20`, `20~30`, `>30`℃로 구분했다.
 - **Spearman 상관계수·산점도**: 선형성보다 순위 관계를 확인하고, 기온·강수량과 이용량의 방향성을 시각적으로 비교했다.
 - **STL 분해**: `period=7`로 추세·주간 계절성·잔차를 분리했다. 이는 예측 모델이 아니라 구성요소 해석용이다.
+- **간단 예측 baseline**: 마지막 28일을 검증 구간으로 분리하고, 직전 7일 패턴을 반복하는 계절성 naive 방식으로 예측했다. 정확도 경쟁이 아니라 예측 가정과 평가 방법을 경험하기 위한 기준선이다.
 
 ## 6. 시각화 결과
 
@@ -104,6 +105,12 @@ STL의 주간 계절성 성분에서 평일과 주말의 반복 진동이 확인
 
 평균기온과 일별 이용량의 Spearman 상관계수는 `+0.526`, 강수량과 이용량은 `-0.251`이었다. 즉 이 기간에는 따뜻한 날일수록 이용량이 높은 순위 관계가, 비가 많을수록 이용량이 낮은 순위 관계가 관찰됐다. 다만 두 변수 모두 계절·요일과 함께 변할 수 있으므로, 이 수치만으로 날씨가 이용량을 줄이거나 늘린다는 인과관계를 주장할 수 없다. 상관계수는 방향과 강도를 탐색하는 보조 지표로 사용하고, 다음 단계에서는 월·요일·공휴일을 통제한 분석이 필요하다.
 
+### 6.6 간단 예측: 7일 계절성 naive baseline
+
+![28일 holdout baseline 예측](images/06_baseline_forecast.png)
+
+마지막 28일을 학습에 사용하지 않고 검증 구간으로 남긴 뒤, 학습 구간의 마지막 7일 이용량을 다음 주에도 반복된다고 가정했다. 이 단순한 기준선의 MAE는 `23,535건`, MAPE는 `32.3%`였다. 주간 반복 패턴은 일부 방향을 잡아주지만, 겨울철 급락·휴일·날씨 같은 변동을 설명하지 못해 단독 예측기로 사용하기에는 부족하다. 이후 모델을 비교할 때 이 baseline보다 좋아지는지 확인하는 기준으로 활용한다.
+
 ## 7. 인사이트
 
 ### 인사이트 1. 계절성은 장기 이용량의 가장 큰 구조다
@@ -130,6 +137,12 @@ STL의 주간 계절성 성분에서 평일과 주말의 반복 진동이 확인
 - **해석(Hypothesis)**: 폭우·휴일·행사·운영 이슈가 결합한 결과일 수 있다. 5월 28일처럼 전날 기준값이 너무 작으면 변화율이 크게 보이는 base effect도 있다.
 - **Action**: 이상 날짜를 자동 삭제하지 않고 기상 특보, 공휴일, 운영 장애·공급량 로그와 대조한다. 운영 모니터링에서는 전일 변화율보다 7일 이동평균 편차와 절대 이용량을 함께 사용한다.
 
+### 인사이트 5. 주간 리듬만으로는 다음 달을 충분히 설명하기 어렵다
+
+- **관찰(Fact)**: 마지막 28일을 holdout으로 평가한 7일 계절성 naive baseline의 MAE는 23,535건, MAPE는 32.3%였다. 예측선은 요일별 반복 모양은 따라가지만 실제 급락·급등의 크기는 자주 놓쳤다.
+- **해석(Hypothesis)**: 따릉이 수요에는 주간 반복 외에도 기온, 강수, 공휴일, 운영·공급 변화가 함께 작용한다. baseline 성능이 낮다는 사실은 복잡한 모델이 자동으로 필요하다는 뜻이라기보다, 추가 변수를 비교해야 한다는 신호다.
+- **Action**: 다음 단계에서는 월·요일·공휴일·기상 변수를 포함한 회귀 또는 gradient boosting 모델을 같은 holdout 구간에서 비교한다. 모델을 추가하더라도 baseline과 동일한 평가 구간을 유지한다.
+
 ## 8. 결론
 
 2023~2024년 731일의 서울시 전체 따릉이 이용량에는 뚜렷한 월별 계절성과 주간 요일 패턴이 있었다. 이용량은 1월·겨울에 낮고 6월·가을에 높았으며, 금요일이 일요일보다 평균적으로 높았다. 비가 온 날과 0℃ 이하인 날의 이용량도 낮게 나타나 날씨 보조 데이터와 일관된 연관성을 보였다.
@@ -144,6 +157,7 @@ STL의 주간 계절성 성분에서 평일과 주말의 반복 진동이 확인
 - 공휴일, 학교 방학, 행사, 자전거 공급·재배치, 시스템 장애를 통제하지 않았다.
 - 비가 온 날의 정의를 `precip_mm > 0`으로 단순화했으며, 강수 강도·시간대·눈을 별도로 구분하지 않았다.
 - 일별 변화율은 전날 이용량이 작은 경우 크게 부풀려질 수 있다.
+- 간단 예측은 한 번의 28일 holdout과 7일 계절성 naive 가정만 사용했으므로, 다른 기간·다른 모델의 성능으로 일반화할 수 없다. MAPE도 실제 이용량이 작은 날에 민감하다.
 
 ## 10. 재현 방법과 산출물
 
@@ -165,7 +179,7 @@ pytest -q
 생성 파일:
 
 - 정제·특징 데이터: [data/processed_daily_rentals.csv](data/processed_daily_rentals.csv)
-- 시각화: [images/01_daily_trend.png](images/01_daily_trend.png), [images/02_month_weekday_heatmap.png](images/02_month_weekday_heatmap.png), [images/03_weather_effect.png](images/03_weather_effect.png), [images/04_stl_decomposition.png](images/04_stl_decomposition.png), [images/05_correlation.png](images/05_correlation.png)
+- 시각화: [images/01_daily_trend.png](images/01_daily_trend.png), [images/02_month_weekday_heatmap.png](images/02_month_weekday_heatmap.png), [images/03_weather_effect.png](images/03_weather_effect.png), [images/04_stl_decomposition.png](images/04_stl_decomposition.png), [images/05_correlation.png](images/05_correlation.png), [images/06_baseline_forecast.png](images/06_baseline_forecast.png)
 - 코드: [analysis.py](analysis.py), [src/bike_analysis.py](src/bike_analysis.py), [scripts/download_weather.py](scripts/download_weather.py)
 
 ## 11. AI 사용 로그
@@ -174,7 +188,7 @@ pytest -q
 |---|---|---|
 | 프로젝트 주제·질문·폴더 구조 초안 | 과제 요구사항을 빠르게 실행 가능한 범위로 구체화 | 질문 4개, 731개 포인트, 필수 산출물 목록을 직접 대조 |
 | CSV 인코딩·컬럼 alias·중복 제거·캘린더 처리 코드 | 반복적인 전처리 구현 시간 절감 및 예외 케이스 탐색 | CP949 fixture와 `대여건수` alias 테스트를 먼저 실패시킨 뒤 통과 확인 |
-| 이동평균·변화율·요일·기온 구간·Spearman 산점도·STL·시각화 코드 | 분석 대안 비교와 차트 생성 자동화 | `pytest -q`, 실제 파이프라인 재실행, 생성 CSV와 이미지 파일 존재 확인 |
+| 이동평균·변화율·요일·기온 구간·Spearman 산점도·STL·baseline 예측·시각화 코드 | 분석 대안 비교와 차트 생성 자동화 | `pytest -q`, 실제 파이프라인 재실행, 생성 CSV와 이미지 파일 존재 확인 |
 | 인사이트 문장 초안과 보고서 구조 | 관찰·해석·행동을 분리한 문장 구성 | 원본 CSV에서 월·요일·날씨·변화율 수치를 독립 재계산하고 인과 표현을 상관·가설 수준으로 수정 |
 
 최종 결론과 수치 선택은 AI 출력만 그대로 사용하지 않고, 생성된 `processed_daily_rentals.csv`를 다시 집계해 확인했다.

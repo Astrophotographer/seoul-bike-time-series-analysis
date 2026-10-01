@@ -453,6 +453,7 @@
         display: flex;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
         margin-bottom: 14px;
         color: var(--muted);
       }
@@ -950,8 +951,8 @@
               <h2 id="evidence-title">A city has<br /><span>a rhythm.</span></h2>
               <p>
                 일별 노이즈를 그대로 믿지 않고 7일 이동평균, 월·요일 집계, 날씨 구간,
-                STL 분해를 겹쳐 보았다. 같은 숫자도 어떤 렌즈로 보느냐에 따라 다른
-                질문을 만든다.
+                STL 분해, 7일 baseline 예측을 겹쳐 보았다. 같은 숫자도 어떤 렌즈로
+                보느냐에 따라 다른 질문을 만든다.
               </p>
             </div>
           </div>
@@ -963,7 +964,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>01 / movement</span><span>7-day smooth</span></div>
+              <div class="chart-meta"><span>01 / movement</span><span>X축: 날짜 · 7-day smooth</span></div>
               <img
                 src="images/01_daily_trend.png"
                 alt="2023년과 2024년 서울시 따릉이 일별 이용량 및 7일 이동평균"
@@ -981,7 +982,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>02 / repetition</span><span>month × weekday</span></div>
+              <div class="chart-meta"><span>02 / repetition</span><span>X축: 요일 · Y축: 월</span></div>
               <img
                 src="images/02_month_weekday_heatmap.png"
                 alt="월별 및 요일별 따릉이 평균 이용량 히트맵"
@@ -999,7 +1000,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>03 / friction</span><span>weather lens</span></div>
+              <div class="chart-meta"><span>03 / friction</span><span>X축: 비 여부 · 기온 구간</span></div>
               <img
                 src="images/03_weather_effect.png"
                 alt="비 여부와 기온 구간별 따릉이 평균 이용량 비교"
@@ -1017,7 +1018,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>04 / decomposition</span><span>STL · period 7</span></div>
+              <div class="chart-meta"><span>04 / decomposition</span><span>X축: 날짜 · STL / 7일</span></div>
               <img
                 src="images/04_stl_decomposition.png"
                 alt="서울시 따릉이 이용량의 추세, 주간 계절성, 잔차를 분리한 STL 시계열 분해"
@@ -1035,7 +1036,7 @@
               target="_blank"
               rel="noreferrer"
             >
-              <div class="chart-meta"><span>05 / association</span><span>Spearman ρ</span></div>
+              <div class="chart-meta"><span>05 / association</span><span>X축: 기온 · 강수량</span></div>
               <img
                 src="images/05_correlation.png"
                 alt="평균기온과 강수량 각각을 따릉이 일별 이용량과 비교한 Spearman 상관관계 산점도"
@@ -1046,6 +1047,24 @@
                 <p>temperature / rain / rentals</p>
               </div>
             </a>
+
+            <a
+              class="chart-card wide reveal"
+              href="images/06_baseline_forecast.png"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div class="chart-meta"><span>06 / forecast</span><span>X축: 날짜 · 28-day holdout</span></div>
+              <img
+                src="images/06_baseline_forecast.png"
+                alt="마지막 28일을 검증 구간으로 둔 7일 계절성 naive baseline 예측과 실제 따릉이 이용량 비교"
+                loading="lazy"
+              />
+              <div class="chart-caption">
+                <h3>Can a simple rhythm forecast the next month?</h3>
+                <p>X-axis: calendar date · actual / baseline</p>
+              </div>
+            </a>
           </div>
 
           <div class="observation-bar reveal">
@@ -1054,7 +1073,8 @@
               <strong>1월 57,335건 → 6월 163,193건.</strong> 계절 폭이 가장 크고,
               금요일 평균 133,449건은 일요일 97,294건보다 높다. 평균기온과 대여량의
               Spearman ρ는 <strong>+0.526</strong>, 강수량과는 <strong>−0.251</strong>이다.
-              그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
+              28일 baseline 예측의 MAE는 <strong>23,535건</strong>, MAPE는
+              <strong>32.3%</strong>였다. 그래프에서 먼저 확인한 사실을 해석보다 앞에 둔다.
             </p>
           </div>
         </section>
@@ -1107,6 +1127,15 @@
                 74.6mm였다. 폭우·휴일·운영 이슈를 원본 로그와 대조해야 한다.
               </p>
             </article>
+            <article class="insight reveal">
+              <span class="insight-number">05 / forecast</span>
+              <h3>주간 리듬은 기준선이지 답은 아니다.</h3>
+              <p>
+                <strong>관찰:</strong> 마지막 28일 holdout에서 7일 seasonal naive의
+                MAE는 23,535건, MAPE는 32.3%였다. 요일 반복은 따라가지만 날씨·휴일의
+                급격한 변화를 설명하기에는 부족하다.
+              </p>
+            </article>
           </div>
         </section>
 
@@ -1128,6 +1157,8 @@
                 <span class="method-tag">weekday × month</span>
                 <span class="method-tag">spearman</span>
                 <span class="method-tag">STL / period 7</span>
+                <span class="method-tag">7d seasonal naive</span>
+                <span class="method-tag">28d holdout</span>
               </div>
             </div>
 

@@ -61,6 +61,7 @@ python analysis.py \
 - `images/03_weather_effect.png`: 강수·기온 구간별 비교
 - `images/04_stl_decomposition.png`: `statsmodels`가 설치된 경우 생성되는 STL 분해
 - `images/05_correlation.png`: 평균기온·강수량과 이용량의 Spearman 상관 산점도
+- `images/06_baseline_forecast.png`: 마지막 28일 holdout의 7일 계절성 naive baseline 예측
 
 ## 테스트
 

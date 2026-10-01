@@ -411,6 +411,71 @@ def summarize_analysis(frame: pd.DataFrame) -> dict[str, object]:
     return summary
 
 
+def make_baseline_forecast(
+    frame: pd.DataFrame, horizon: int = 28, seasonal_period: int = 7
+) -> pd.DataFrame:
+    """Forecast the final horizon by repeating the last observed seasonal cycle."""
+
+    if horizon <= 0:
+        raise ValueError("horizon must be positive")
+    if seasonal_period <= 0:
+        raise ValueError("seasonal_period must be positive")
+
+    series = frame[["date", "rental_count"]].copy()
+    series["date"] = pd.to_datetime(series["date"], errors="coerce")
+    series["rental_count"] = pd.to_numeric(series["rental_count"], errors="coerce")
+    series = (
+        series.dropna()
+        .drop_duplicates("date")
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
+    if len(series) <= horizon or len(series) - horizon < seasonal_period:
+        raise ValueError(
+            "at least horizon + seasonal_period valid observations are required"
+        )
+
+    train = series.iloc[:-horizon]
+    test = series.iloc[-horizon:]
+    seasonal_values = train["rental_count"].to_numpy()[-seasonal_period:]
+    forecast_values = [
+        seasonal_values[index % seasonal_period] for index in range(horizon)
+    ]
+    return pd.DataFrame(
+        {
+            "date": test["date"].to_numpy(),
+            "actual": test["rental_count"].to_numpy(),
+            "forecast": forecast_values,
+        }
+    )
+
+
+def summarize_forecast(forecast: pd.DataFrame) -> dict[str, object]:
+    """Return holdout metrics for a baseline forecast table."""
+
+    valid = forecast[["actual", "forecast"]].apply(
+        pd.to_numeric, errors="coerce"
+    ).dropna()
+    if valid.empty:
+        return {"horizon": 0, "mae": None, "mape": None}
+
+    absolute_error = (valid["actual"] - valid["forecast"]).abs()
+    nonzero_actual = valid["actual"].ne(0)
+    if nonzero_actual.any():
+        mape = (
+            (absolute_error[nonzero_actual] / valid.loc[nonzero_actual, "actual"])
+            .mul(100)
+            .mean()
+        )
+    else:
+        mape = None
+    return {
+        "horizon": int(len(valid)),
+        "mae": float(absolute_error.mean()),
+        "mape": None if pd.isna(mape) else float(mape),
+    }
+
+
 def _add_source_footer(fig: plt.Figure) -> None:
     fig.text(
         0.01,
@@ -437,8 +502,8 @@ def _plot_daily_trend(frame: pd.DataFrame, output_dir: Path) -> Path:
     rolling = frame.get("rolling_7d", counts.rolling(7, min_periods=7).mean())
     ax.plot(dates, rolling, color="#1565c0", linewidth=2, label="7-day moving average")
     ax.set_title("Seoul public bike daily rentals and 7-day moving average")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Rental count")
+    ax.set_xlabel("X axis: calendar date")
+    ax.set_ylabel("Y axis: daily rental count")
     ax.legend()
     ax.grid(alpha=0.2)
     fig.autofmt_xdate()
@@ -463,8 +528,8 @@ def _plot_seasonality_heatmap(frame: pd.DataFrame, output_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.heatmap(pivot, cmap="YlGnBu", annot=False, linewidths=0.3, ax=ax)
     ax.set_title("Mean bike rentals by month and weekday")
-    ax.set_xlabel("Weekday (Monday=0)")
-    ax.set_ylabel("Month")
+    ax.set_xlabel("X axis: weekday (Monday=0, Sunday=6)")
+    ax.set_ylabel("Y axis: month (1-12)")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 1])
     return _save_figure(fig, output_dir / "02_month_weekday_heatmap.png")
@@ -492,8 +557,8 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
                 ax=axes[0],
                 color="#90caf9",
             )
-            axes[0].set_xlabel("Rain flag (False = no rain)")
-            axes[0].set_ylabel("Rental count")
+            axes[0].set_xlabel("X axis: rain flag (False = no rain)")
+            axes[0].set_ylabel("Y axis: daily rental count")
         else:
             axes[0].text(0.5, 0.5, "No valid precipitation data", ha="center", va="center")
             axes[0].set_axis_off()
@@ -508,8 +573,8 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
                 ax=axes[1],
                 color="#ffcc80",
             )
-            axes[1].set_xlabel("Mean temperature bin (C)")
-            axes[1].set_ylabel("Rental count")
+            axes[1].set_xlabel("X axis: mean temperature bin (C)")
+            axes[1].set_ylabel("Y axis: daily rental count")
             axes[1].tick_params(axis="x", rotation=20)
         else:
             axes[1].text(0.5, 0.5, "No valid temperature data", ha="center", va="center")
@@ -528,8 +593,8 @@ def _plot_weather_effect(frame: pd.DataFrame, output_dir: Path) -> Path:
 def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
     fig, axes = plt.subplots(1, 2, figsize=(13, 5))
     plots = (
-        ("mean_temp_c", "Mean temperature (°C)", "Temperature ↔ rentals", "#f6a64b"),
-        ("precip_mm", "Precipitation (mm)", "Rain ↔ rentals", "#4cb6c5"),
+        ("mean_temp_c", "X axis: mean temperature (C)", "Temperature ↔ rentals", "#f6a64b"),
+        ("precip_mm", "X axis: precipitation (mm)", "Rain ↔ rentals", "#4cb6c5"),
     )
 
     for axis, (column, xlabel, title, color) in zip(axes, plots):
@@ -571,13 +636,95 @@ def _plot_correlation(frame: pd.DataFrame, output_dir: Path) -> Path:
         )
         axis.set_title(title)
         axis.set_xlabel(xlabel)
-        axis.set_ylabel("Daily rental count")
+        axis.set_ylabel("Y axis: daily rental count")
         axis.grid(alpha=0.2)
 
     fig.suptitle("Weather and daily bike rentals: association, not causation")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 0.94])
     return _save_figure(fig, output_dir / "05_correlation.png")
+
+
+def _plot_baseline_forecast(
+    frame: pd.DataFrame,
+    output_dir: Path,
+    horizon: int = 28,
+    seasonal_period: int = 7,
+) -> Path | None:
+    try:
+        forecast = make_baseline_forecast(
+            frame, horizon=horizon, seasonal_period=seasonal_period
+        )
+    except ValueError as error:
+        print(f"Baseline forecast skipped: {error}")
+        return None
+
+    series = frame[["date", "rental_count"]].copy()
+    series["date"] = pd.to_datetime(series["date"], errors="coerce")
+    series["rental_count"] = pd.to_numeric(series["rental_count"], errors="coerce")
+    series = (
+        series.dropna()
+        .drop_duplicates("date")
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
+    train = series.iloc[:-horizon].tail(max(56, horizon * 2))
+    metrics = summarize_forecast(forecast)
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.plot(
+        train["date"],
+        train["rental_count"],
+        color="#9aa6b2",
+        linewidth=1.1,
+        label="Actual · train context",
+    )
+    ax.plot(
+        forecast["date"],
+        forecast["actual"],
+        color="#1565c0",
+        linewidth=2,
+        label="Actual · holdout",
+    )
+    ax.plot(
+        forecast["date"],
+        forecast["forecast"],
+        color="#e67e22",
+        linewidth=2,
+        linestyle="--",
+        marker="o",
+        markersize=3,
+        label="7-day seasonal naive",
+    )
+    ax.axvspan(
+        forecast["date"].iloc[0],
+        forecast["date"].iloc[-1],
+        color="#f6b85f",
+        alpha=0.09,
+        label="28-day holdout",
+    )
+    mape = metrics["mape"]
+    mape_text = "n/a" if mape is None else f"{mape:.1f}%"
+    metric_text = f"MAE {metrics['mae']:,.0f} · MAPE {mape_text}"
+    ax.text(
+        0.98,
+        0.96,
+        metric_text,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=10,
+        bbox={"facecolor": "white", "alpha": 0.82, "edgecolor": "none"},
+    )
+    ax.set_title("28-day baseline forecast (7-day seasonal naive)")
+    ax.set_xlabel("X axis: calendar date")
+    ax.set_ylabel("Y axis: daily rental count")
+    ax.legend(loc="upper left")
+    ax.grid(alpha=0.2)
+    fig.autofmt_xdate()
+    _add_source_footer(fig)
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
+    return _save_figure(fig, output_dir / "06_baseline_forecast.png")
 
 
 def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
@@ -607,7 +754,7 @@ def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
         axis.plot(values.index, values.values, linewidth=0.8)
         axis.set_ylabel(label)
         axis.grid(alpha=0.2)
-    axes[-1].set_xlabel("Date")
+    axes[-1].set_xlabel("X axis: calendar date")
     fig.suptitle("STL decomposition of daily bike rentals (weekly period)")
     _add_source_footer(fig)
     fig.tight_layout(rect=[0, 0.04, 1, 0.96])
@@ -615,7 +762,10 @@ def _plot_stl(frame: pd.DataFrame, output_dir: Path) -> Path | None:
 
 
 def make_plots(
-    frame: pd.DataFrame, output_dir: Path, include_stl: bool = True
+    frame: pd.DataFrame,
+    output_dir: Path,
+    include_stl: bool = True,
+    include_forecast: bool = True,
 ) -> list[Path]:
     """Create required analysis charts and return the generated paths."""
 
@@ -627,6 +777,10 @@ def make_plots(
         _plot_weather_effect(frame, output_path),
         _plot_correlation(frame, output_path),
     ]
+    if include_forecast:
+        forecast_path = _plot_baseline_forecast(frame, output_path)
+        if forecast_path is not None:
+            paths.append(forecast_path)
     if include_stl:
         stl_path = _plot_stl(frame, output_path)
         if stl_path is not None:

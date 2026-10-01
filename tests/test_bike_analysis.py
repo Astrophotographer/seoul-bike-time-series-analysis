@@ -9,10 +9,12 @@ from src.bike_analysis import (
     aggregate_bike_files,
     complete_calendar,
     flag_outliers,
+    make_baseline_forecast,
     make_plots,
     merge_weather,
     normalize_bike_columns,
     normalize_weather_columns,
+    summarize_forecast,
     summarize_analysis,
 )
 
@@ -21,6 +23,7 @@ def test_analysis_module_exports_public_api():
     assert callable(aggregate_bike_files)
     assert callable(complete_calendar)
     assert callable(add_features)
+    assert callable(make_baseline_forecast)
 
 
 def test_normalize_bike_columns_maps_korean_names():
@@ -244,6 +247,23 @@ def test_summarize_analysis_reports_spearman_weather_correlations():
     assert summary["spearman_precip_mm_rental"] == pytest.approx(-1.0)
 
 
+def test_make_baseline_forecast_repeats_last_week_without_peeking():
+    frame = pd.DataFrame(
+        {
+            "date": pd.date_range("2023-01-01", periods=14, freq="D"),
+            "rental_count": list(range(10, 150, 10)),
+        }
+    )
+
+    forecast = make_baseline_forecast(frame, horizon=7, seasonal_period=7)
+    metrics = summarize_forecast(forecast)
+
+    assert forecast["actual"].tolist() == [80, 90, 100, 110, 120, 130, 140]
+    assert forecast["forecast"].tolist() == [10, 20, 30, 40, 50, 60, 70]
+    assert metrics["horizon"] == 7
+    assert metrics["mae"] == pytest.approx(70.0)
+
+
 def test_make_plots_creates_required_pngs(tmp_path: Path):
     paths = make_plots(_featured_frame(), tmp_path, include_stl=False)
 
@@ -253,6 +273,7 @@ def test_make_plots_creates_required_pngs(tmp_path: Path):
         "02_month_weekday_heatmap.png",
         "03_weather_effect.png",
         "05_correlation.png",
+        "06_baseline_forecast.png",
     }.issubset(names)
     assert all(path.exists() for path in paths)
 
